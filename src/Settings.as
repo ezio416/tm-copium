@@ -17,6 +17,12 @@ float S_X = 0.5f;
 [Setting category="Position/Style" name="Position Y" min=0.0f max=1.0f]
 float S_Y = 0.987f;
 
+[Setting category="Position/Style" name="Positive delta color" description="slower than PB" color]
+vec4 S_PositiveColor = vec4(0.8f, 0.0f, 0.0f, 0.8f);
+
+[Setting category="Position/Style" name="Negative delta color" description="faster than PB" color]
+vec4 S_NegativeColor = vec4(0.0f, 0.0f, 0.8f, 0.8f);
+
 // [Setting category="Position/Style" name="Show background"]
 // bool S_Background = false;
 

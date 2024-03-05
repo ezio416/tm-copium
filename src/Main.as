@@ -1,8 +1,6 @@
 // c 2024-03-05
 // m 2024-03-05
 
-const vec4   colorBlue    = vec4(0, 0, 0.8, 0.8);
-const vec4   colorRed     = vec4(0.8, 0, 0, 0.8);
 string       diffPB;
 bool         firstCP      = true;
 string       infos;
@@ -97,7 +95,7 @@ void Render() {
 
         nvg::BeginPath();
         nvg::Rect(width + center + 3.0f, height - (S_FontSize - 2) / 2.0f - 2.0f, wd + 5.0f, S_FontSize);
-        nvg::FillColor(diffPB.SubStr(0, 1) == "-" ? colorBlue : colorRed);
+        nvg::FillColor(diffPB.SubStr(0, 1) == "-" ? S_NegativeColor : S_PositiveColor);
         nvg::Fill();
 
         nvg::FontSize(S_FontSize - 2.0f);
