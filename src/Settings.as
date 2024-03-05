@@ -1,26 +1,26 @@
-[Setting name="Show timer"]
-bool showTimer = true;
+[Setting category="General" name="Show timer"]
+bool S_Enabled = true;
 
-[Setting name="Show drop shadow" description="disables background color when enabled"]
-bool showDropShadow = true;
+[Setting category="General" name="Show/hide with game UI"]
+bool S_HideWithGame = true;
 
-[Setting name="Hide timer when interface is hidden"]
-bool hideTimerWithIFace = true;
+[Setting category="General" name="Show adjusted CP delta" description="only if an official one exists"]
+bool S_CpDelta = true;
 
-[Setting name="Show adjusted CP delta" description="only if an official one exists"]
-bool cpDelta = true;
+[Setting category="Position/Style" name="Position X" min=0.0f max=1.0f]
+float S_X = 0.5f;
 
-[Setting name="Anchor X position" min=0 max=1]
-float anchorX = .5;
+[Setting category="Position/Style" name="Position Y" min=0.0f max=1.0f]
+float S_Y = 0.987f;
 
-[Setting name="Anchor Y position" min=0 max=1]
-float anchorY = .987;
+[Setting category="Position/Style" name="Background color" color]
+vec4 S_BackgroundColor = vec4(0.0f, 0.0f, 0.0f, 0.0f);
 
-[Setting name="Font size" min=8 max=72]
-int fontSize = 24;
+[Setting category="Position/Style" name="Show drop shadow" description="disables background color"]
+bool S_DropShadow = true;
 
-[Setting color name="Timer color"]
-vec4 colorNormal = vec4(1, 1, 1, 1);
+[Setting category="Position/Style" name="Font size" min=8 max=72]
+uint S_FontSize = 24;
 
-[Setting color name="Background color"]
-vec4 backColor = vec4(0, 0, 0, 0);
+[Setting category="Position/Style" name="Font color" color]
+vec4 S_FontColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);

@@ -25,103 +25,103 @@ void Main() {
 }
 
 void RenderMenu() {
-    if (UI::MenuItem(title, "", showTimer))
-        showTimer = !showTimer;
+    if (UI::MenuItem(title, "", S_Enabled))
+        S_Enabled = !S_Enabled;
 }
 
 void Render() {
-    if (showTimer && inGame && infos != "") {
+    if (S_Enabled && inGame && infos != "") {
         nvg::FontFace(font);
-        nvg::FontSize(fontSize);
+        nvg::FontSize(S_FontSize);
 
-        float w = infos.Length < 12 ? infos.Length * fontSize * 0.5f : nvg::TextBounds(infos).x;
+        float w = infos.Length < 12 ? infos.Length * S_FontSize * 0.5f : nvg::TextBounds(infos).x;
         float bck_l = 0.0f;
         float bck_w = 0.0f;
-        float y = anchorY * Draw::GetHeight() + 1.0f;
-        float shadowOffset = fontSize / 12.0f;
+        float y = S_X * Draw::GetHeight() + 1.0f;
+        float shadowOffset = S_FontSize / 12.0f;
 
         if (medal > 0) {
-            bck_w = fontSize * 3.0f - 4.0f;
+            bck_w = S_FontSize * 3.0f - 4.0f;
             bck_l = -0.5f * bck_w;
         }
 
-        if (diffPB == "" || !cpDelta) {
+        if (diffPB == "" || !S_CpDelta) {
             nvg::TextAlign(nvg::Align::Center | nvg::Align::Middle);
 
-            if (showDropShadow) {
+            if (S_DropShadow) {
                 nvg::FillColor(vec4(0.0f, 0.0f, 0.0f, 1.0f));
-                nvg::TextBox(anchorX * Draw::GetWidth() - w / 2.0f - 2.0f + shadowOffset, y + shadowOffset, w + 4.0f, infos);
+                nvg::TextBox(S_X * Draw::GetWidth() - w / 2.0f - 2.0f + shadowOffset, y + shadowOffset, w + 4.0f, infos);
             } else {
                 nvg::BeginPath();
-                bck_l += anchorX * Draw::GetWidth() - w / 2.0f - 3.0f;
+                bck_l += S_X * Draw::GetWidth() - w / 2.0f - 3.0f;
                 bck_w += w + 6.0f;
-                nvg::Rect(bck_l, y - (fontSize - 2) / 2.0f - 3.0f, bck_w, fontSize + 2.0f);
-                nvg::FillColor(backColor);
+                nvg::Rect(bck_l, y - (S_FontSize - 2) / 2.0f - 3.0f, bck_w, S_FontSize + 2.0f);
+                nvg::FillColor(S_BackgroundColor);
                 nvg::Fill();
                 nvg::ClosePath();
             }
 
-            nvg::FillColor(colorNormal);
-            nvg::TextBox(anchorX * Draw::GetWidth() - w / 2.0f - 2.0f, y, w + 4.0f, infos);
+            nvg::FillColor(S_FontColor);
+            nvg::TextBox(S_X * Draw::GetWidth() - w / 2.0f - 2.0f, y, w + 4.0f, infos);
         } else {
-            nvg::FontSize(fontSize - 2.0f);
+            nvg::FontSize(S_FontSize - 2.0f);
             float wd = nvg::TextBounds(diffPB).x;
             float center = (w - wd) / 2.0f;
 
-            nvg::FontSize(fontSize);
+            nvg::FontSize(S_FontSize);
             nvg::TextAlign(nvg::Align::Right | nvg::Align::Middle);
 
-            if (showDropShadow) {
+            if (S_DropShadow) {
                 nvg::FillColor(vec4(0.0f, 0.0f, 0.0f, 1.0f));
-                nvg::TextBox(anchorX * Draw::GetWidth() +center - w - 10.0f + shadowOffset, y + shadowOffset, w + 4.0f, infos);
+                nvg::TextBox(S_X * Draw::GetWidth() +center - w - 10.0f + shadowOffset, y + shadowOffset, w + 4.0f, infos);
             } else {
                 nvg::BeginPath();
-                bck_l += anchorX * Draw::GetWidth() + center - w - 8.0f;
+                bck_l += S_X * Draw::GetWidth() + center - w - 8.0f;
                 bck_w += w + wd + 17.0f;
-                nvg::Rect(bck_l, y - (fontSize - 2) / 2.0f - 3.0f, bck_w, fontSize + 2.0f);
-                nvg::FillColor(backColor);
+                nvg::Rect(bck_l, y - (S_FontSize - 2) / 2.0f - 3.0f, bck_w, S_FontSize + 2.0f);
+                nvg::FillColor(S_BackgroundColor);
                 nvg::Fill();
                 nvg::ClosePath();
             }
 
-            nvg::FillColor(colorNormal);
-            nvg::TextBox(anchorX * Draw::GetWidth() + center - w - 10.0f, y, w + 4.0f, infos);
+            nvg::FillColor(S_FontColor);
+            nvg::TextBox(S_X * Draw::GetWidth() + center - w - 10.0f, y, w + 4.0f, infos);
 
             nvg::BeginPath();
-            nvg::Rect(anchorX * Draw::GetWidth() + center + 3.0f, y - (fontSize - 2) / 2.0f - 2.0f, wd + 5.0f, fontSize);
+            nvg::Rect(S_X * Draw::GetWidth() + center + 3.0f, y - (S_FontSize - 2) / 2.0f - 2.0f, wd + 5.0f, S_FontSize);
             nvg::FillColor(diffPB.SubStr(0, 1) == "-" ? colorBlue : colorRed);
             nvg::Fill();
             nvg::ClosePath();
 
-            nvg::FontSize(fontSize - 2.0f);
+            nvg::FontSize(S_FontSize - 2.0f);
             nvg::TextAlign(nvg::Align::Left | nvg::Align::Middle);
-            nvg::FillColor(colorNormal);
-            nvg::TextBox(anchorX * Draw::GetWidth() + center + 6.0f, y + 1.0f, wd + 4.0f, diffPB);
+            nvg::FillColor(S_FontColor);
+            nvg::TextBox(S_X * Draw::GetWidth() + center + 6.0f, y + 1.0f, wd + 4.0f, diffPB);
 
             w += wd + 10.0f;
         }
 
         if (medal >= 1) {
-            if (showDropShadow) {
+            if (S_DropShadow) {
                 nvg::BeginPath();
-                nvg::Ellipse(vec2(anchorX * Draw::GetWidth() - w / 2.0f - fontSize + shadowOffset, y - 1.0f + shadowOffset), fontSize / 2.5f, fontSize / 2.5f);
+                nvg::Ellipse(vec2(S_X * Draw::GetWidth() - w / 2.0f - S_FontSize + shadowOffset, y - 1.0f + shadowOffset), S_FontSize / 2.5f, S_FontSize / 2.5f);
                 nvg::FillColor(vec4(0.0f, 0.0f, 0.0f, 1.0f));
                 nvg::Fill();
                 nvg::ClosePath();
                 nvg::BeginPath();
-                nvg::Ellipse(vec2(anchorX * Draw::GetWidth() + w / 2.0f + fontSize + shadowOffset, y - 1.0f + shadowOffset), fontSize / 2.5f, fontSize / 2.5f);
+                nvg::Ellipse(vec2(S_X * Draw::GetWidth() + w / 2.0f + S_FontSize + shadowOffset, y - 1.0f + shadowOffset), S_FontSize / 2.5f, S_FontSize / 2.5f);
                 nvg::FillColor(vec4(0.0f, 0.0f, 0.0f, 1.0f));
                 nvg::Fill();
                 nvg::ClosePath();
             }
 
             nvg::BeginPath();
-            nvg::Ellipse(vec2(anchorX * Draw::GetWidth() - w / 2.0f - fontSize, y - 1.0f), fontSize / 2.5f, fontSize / 2.5f);
+            nvg::Ellipse(vec2(S_X * Draw::GetWidth() - w / 2.0f - S_FontSize, y - 1.0f), S_FontSize / 2.5f, S_FontSize / 2.5f);
             nvg::FillColor(medals[medal]);
             nvg::Fill();
             nvg::ClosePath();
             nvg::BeginPath();
-            nvg::Ellipse(vec2(anchorX * Draw::GetWidth() + w / 2.0f + fontSize, y - 1.0f), fontSize / 2.5f, fontSize / 2.5f);
+            nvg::Ellipse(vec2(S_X * Draw::GetWidth() + w / 2.0f + S_FontSize, y - 1.0f), S_FontSize / 2.5f, S_FontSize / 2.5f);
             nvg::FillColor(medals[medal]);
             nvg::Fill();
             nvg::ClosePath();
@@ -171,7 +171,7 @@ void Update(float) {
     }
 
     // in game only if interface displayed or don't care
-    inGame = !hideTimerWithIFace || UI::IsGameUIVisible();
+    inGame = !S_HideWithGame || UI::IsGameUIVisible();
 
     if (Playground.GameTerminals[0].UISequence_Current == CGamePlaygroundUIConfig::EUISequence::Playing) {
         if (preCPIdx == -1) {
@@ -189,7 +189,7 @@ void Update(float) {
                 firstCP = false;
                 lastCPTime = raceTime - timeShift;
 
-                if (respawnCount > 0 && cpDelta) {
+                if (respawnCount > 0 && S_CpDelta) {
                     int64 diff = GetDiffPB();
 
                     if (diff == 0)
@@ -219,7 +219,7 @@ void Update(float) {
         if (respawnCount > 0 && raceTime >= timeShift) {
             infos = FormatTime(raceTime - timeShift) + " (" + respawnCount + " respawn" + (respawnCount > 1 ? "s" : "") + ")";
 
-            if (cpDelta) {
+            if (S_CpDelta) {
                 int64 diff = GetDiffPB();
                 if (diff == 0)
                     diffPB = "";
