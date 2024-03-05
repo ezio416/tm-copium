@@ -5,7 +5,6 @@ const vec4   colorBlue    = vec4(0, 0, 0.8, 0.8);
 const vec4   colorRed     = vec4(0.8, 0, 0, 0.8);
 string       diffPB;
 bool         firstCP      = true;
-nvg::Font    font;
 string       infos;
 bool         inGame       = false;
 uint64       lastCPTime   = 0;
@@ -24,7 +23,12 @@ const vec4[] medalColors = {
 };
 
 void Main() {
-    font = nvg::LoadFont("DroidSans-Bold.ttf", true);
+    ChangeFont();
+}
+
+void OnSettingsChanged() {
+    if (currentFont != S_Font)
+        ChangeFont();
 }
 
 void RenderMenu() {
