@@ -35,17 +35,21 @@ void Render() {
     if (showTimer && inGame && infos != "") {
         nvg::FontFace(font);
         nvg::FontSize(fontSize);
+
         float w = infos.Length < 12 ? infos.Length * fontSize * 0.5 : nvg::TextBounds(infos).x;
         float bck_l = 0;
         float bck_w = 0;
         float y = anchorY * Draw::GetHeight() + 1;
         float shadowOffset = fontSize / 12.0;
+
         if (medal >= 1) {
             bck_w = fontSize * 3 - 4;
             bck_l = -0.5 * bck_w;
         }
+
         if (diffPB == "" || !cpDelta) {
             nvg::TextAlign(nvg::Align::Center | nvg::Align::Middle);
+
             if (showDropShadow) {
                 nvg::FillColor(vec4(0, 0, 0, 1));
                 nvg::TextBox(anchorX * Draw::GetWidth() - w / 2 - 2 + shadowOffset, y + shadowOffset, w + 4, infos);
@@ -68,6 +72,7 @@ void Render() {
 
             nvg::FontSize(fontSize);
             nvg::TextAlign(nvg::Align::Right | nvg::Align::Middle);
+
             if (showDropShadow) {
                 nvg::FillColor(vec4(0, 0, 0, 1));
                 nvg::TextBox(anchorX * Draw::GetWidth() +center - w - 10 + shadowOffset, y + shadowOffset, w + 4, infos);
@@ -184,18 +189,22 @@ void Update(float dt) {
                 preCPIdx = player.CurrentLaunchedRespawnLandmarkIndex;
                 firstCP = false;
                 lastCPTime = raceTime - timeShift;
+
                 if (respawnCount > 0 && cpDelta) {
                     int64 diff = GetDiffPB();
+
                     if (diff == 0)
                         diffPB = "";
                     else
                         diffPB = FormatDiff(diff - timeShift);
                 }
             }
+
             if (respawnCount < int(scriptPlayer.Score.NbRespawnsRequested)) {
                 // changing respawn count => time shift recalculated so that timer will be reset to last CP time
                 respawnCount = scriptPlayer.Score.NbRespawnsRequested;
                 timeShift = raceTime - lastCPTime;
+
                 if (!firstCP)
                     timeShift += 1000; // 1000 = 3 - 2 - 1 delay (not applicable on first CP)
             }
@@ -207,6 +216,7 @@ void Update(float dt) {
     } else if (preCPIdx != -1) {
         preCPIdx = -1;
         firstCP = true;
+
         if (respawnCount > 0 && raceTime >= timeShift) {
             infos = FormatTime(raceTime - timeShift) + " (" + respawnCount + " respawn" + (respawnCount > 1 ? "s" : "") + ")";
             if (cpDelta) {
@@ -219,6 +229,7 @@ void Update(float dt) {
 
             auto app = cast<CTrackMania>(GetApp());
             auto map = app.RootMap;
+
             if (map.TMObjective_AuthorTime >= uint(raceTime - timeShift))
                 medal = 4;
             else if (map.TMObjective_GoldTime >= uint(raceTime - timeShift))
@@ -258,13 +269,17 @@ int64 GetDiffPB() {
             CGameUILayer@ curLayer = uilayers[i];
             int start = curLayer.ManialinkPageUtf8.IndexOf("<");
             int end = curLayer.ManialinkPageUtf8.IndexOf(">");
+
             if (start != -1 && end != -1) {
                 auto manialinkname = curLayer.ManialinkPageUtf8.SubStr(start, end);
+
                 if (manialinkname.Contains("UIModule_Race_Checkpoint")) {
                     auto c = cast<CGameManialinkLabel@>(curLayer.LocalPage.GetFirstChild("label-race-diff"));
+
                     if (c.Visible && c.Parent.Visible) {  // reference lap not finished
                         string diff = c.Value;
                         int64 res = 0;
+
                         if (diff.Length == 10) {  // invalid format
                             res = diff.SubStr(0,1) == "-" ? -1 : 1;
                             int min = Text::ParseInt(diff.SubStr(1, 2));
@@ -272,6 +287,7 @@ int64 GetDiffPB() {
                             int ms = Text::ParseInt(diff.SubStr(7, 3));
                             res *= (min * 60000) + (sec * 1000) + ms;
                         }
+
                         return res;
                     }
                 }
@@ -301,10 +317,12 @@ string FormatTime(uint64 time) {
 
 string FormatDiff(int64 time) {
     string str = "+";
+
     if (time < 0) {
         str = "-";
         time *= -1;
     }
+
     double tm = time / 1000.0;
 
     int hundredth = int((tm % 1.0) * 100);
@@ -312,7 +330,8 @@ string FormatDiff(int64 time) {
     int minutes = int(tm / 60) % 60;
     int hours = int(tm / 60 / 60);
 
-    if (hours > 0) str += hours + ":";
+    if (hours > 0)
+        str += hours + ":";
     str += PadNumber(minutes) + ":";
     str += PadNumber(seconds) + ".";
     str += PadNumber(hundredth);
