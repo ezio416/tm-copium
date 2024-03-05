@@ -12,15 +12,15 @@ string FormatDiff(int64 time) {
     double tm = time / 1000.0;
 
     int hundredth = int((tm % 1.0) * 100.0);
-    int seconds = int(tm % 60.0);
-    int minutes = int(tm / 60.0) % 60;
-    int hours = int(tm / 3600.0);
+    int seconds   = int(tm % 60.0);
+    int minutes   = int(tm / 60.0) % 60;
+    int hours     = int(tm / 3600.0);
 
     if (hours > 0)
         str += hours + ":";
-    str += PadNumber(minutes) + ":";
-    str += PadNumber(seconds) + ".";
-    str += PadNumber(hundredth);
+    str += ZPad2(minutes) + ":";
+    str += ZPad2(seconds) + ".";
+    str += ZPad2(hundredth);
 
     return str;
 }
@@ -30,37 +30,33 @@ string FormatTime(uint64 time) {
     double tm = time / 1000.0;
 
     int hundredth = int((tm % 1.0) * 100);
-    int seconds = int(tm % 60.0);
-    int minutes = int(tm / 60.0) % 60;
-    int hours = int(tm / 3600.0);
+    int seconds   = int(tm % 60.0);
+    int minutes   = int(tm / 60.0) % 60;
+    int hours     = int(tm / 3600.0);
 
     if (hours > 0)
         str += hours + ":";
-    str += PadNumber(minutes) + ":";
-    str += PadNumber(seconds) + ".";
-    str += PadNumber(hundredth);
+    str += ZPad2(minutes) + ":";
+    str += ZPad2(seconds) + ".";
+    str += ZPad2(hundredth);
 
     return str;
 }
 
 int64 GetRaceTime(CSmScriptPlayer@ ScriptPlayer) {
     if (ScriptPlayer is null)
-        // not playing
         return 0;
 
     CTrackMania@ App = cast<CTrackMania@>(GetApp());
     CTrackManiaNetwork@ Network = cast<CTrackManiaNetwork@>(App.Network);
     CSmArenaRulesMode@ PlaygroundScript = cast<CSmArenaRulesMode@>(App.PlaygroundScript);
 
-    if (PlaygroundScript is null)  // Online
+    if (PlaygroundScript is null)  // on server
         return Network.PlaygroundClientScriptAPI.GameTime - ScriptPlayer.StartTime;
-    else  // Solo
+    else
         return PlaygroundScript.Now - ScriptPlayer.StartTime;
 }
 
-string PadNumber(int number) {
-    if (number < 10)
-        return "0" + number;
-    else
-        return "" + number;
+string ZPad2(int number) {
+    return (number < 10 ? "0" : "") + number;
 }
