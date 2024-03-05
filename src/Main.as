@@ -129,17 +129,18 @@ void Render() {
     }
 }
 
-void Update(float dt) {
-    auto playground = cast<CSmArenaClient>(GetApp().CurrentPlayground);
+void Update(float) {
+    CTrackMania@ App = cast<CTrackMania@>(GetApp());
+    CSmArenaClient@ Playground = cast<CSmArenaClient@>(App.CurrentPlayground);
 
     if (
-        playground is null
-        || playground.Arena is null
-        || playground.Map is null
-        || playground.GameTerminals.Length <= 0
-        || (playground.GameTerminals[0].UISequence_Current != CGamePlaygroundUIConfig::EUISequence::Playing
-            && playground.GameTerminals[0].UISequence_Current != CGamePlaygroundUIConfig::EUISequence::Finish
-            && playground.GameTerminals[0].UISequence_Current != CGamePlaygroundUIConfig::EUISequence::EndRound)
+        Playground is null
+        || Playground.Arena is null
+        || Playground.Map is null
+        || Playground.GameTerminals.Length == 0
+        || (Playground.GameTerminals[0].UISequence_Current != CGamePlaygroundUIConfig::EUISequence::Playing
+            && Playground.GameTerminals[0].UISequence_Current != CGamePlaygroundUIConfig::EUISequence::Finish
+            && Playground.GameTerminals[0].UISequence_Current != CGamePlaygroundUIConfig::EUISequence::EndRound)
     ) {
         inGame = false;
         preCPIdx = -1;
@@ -147,21 +148,21 @@ void Update(float dt) {
         return;
     }
 
-    auto player = cast<CSmPlayer>(playground.GameTerminals[0].GUIPlayer);
-    auto scriptPlayer = player is null ? null : cast<CSmScriptPlayer>(player.ScriptAPI);
+    CSmPlayer@ Player = cast<CSmPlayer@>(Playground.GameTerminals[0].GUIPlayer);
+    CSmScriptPlayer@ ScriptPlayer = Player is null ? null : cast<CSmScriptPlayer@>(Player.ScriptAPI);
     int64 raceTime = 0;
 
-    if (playground.GameTerminals[0].UISequence_Current != CGamePlaygroundUIConfig::EUISequence::EndRound) {
-        if (scriptPlayer is null) {
+    if (Playground.GameTerminals[0].UISequence_Current != CGamePlaygroundUIConfig::EUISequence::EndRound) {
+        if (ScriptPlayer is null) {
             inGame = false;
             preCPIdx = -1;
             firstCP = true;
             return;
         }
 
-        raceTime = GetRaceTime(scriptPlayer);
+        raceTime = GetRaceTime(ScriptPlayer);
 
-        if (player.CurrentLaunchedRespawnLandmarkIndex == uint(-1) || raceTime <= 0) {
+        if (Player.CurrentLaunchedRespawnLandmarkIndex == uint(-1) || raceTime <= 0) {
             inGame = false;
             preCPIdx = -1;
             firstCP = true;
@@ -172,19 +173,19 @@ void Update(float dt) {
     // in game only if interface displayed or don't care
     inGame = !hideTimerWithIFace || UI::IsGameUIVisible();
 
-    if (playground.GameTerminals[0].UISequence_Current == CGamePlaygroundUIConfig::EUISequence::Playing) {
+    if (Playground.GameTerminals[0].UISequence_Current == CGamePlaygroundUIConfig::EUISequence::Playing) {
         if (preCPIdx == -1) {
             // starting => no time shift, no respawn yet
             lastCPTime = timeShift = respawnCount = 0;
             infos = "";
             diffPB = "";
             medal = -1;
-            preCPIdx = player.CurrentLaunchedRespawnLandmarkIndex;
+            preCPIdx = Player.CurrentLaunchedRespawnLandmarkIndex;
             firstCP = true;
         } else {
-            if (preCPIdx != int(player.CurrentLaunchedRespawnLandmarkIndex)) {
+            if (preCPIdx != int(Player.CurrentLaunchedRespawnLandmarkIndex)) {
                 // changing CP => save last CP time with time shift
-                preCPIdx = player.CurrentLaunchedRespawnLandmarkIndex;
+                preCPIdx = Player.CurrentLaunchedRespawnLandmarkIndex;
                 firstCP = false;
                 lastCPTime = raceTime - timeShift;
 
@@ -198,9 +199,9 @@ void Update(float dt) {
                 }
             }
 
-            if (respawnCount < int(scriptPlayer.Score.NbRespawnsRequested)) {
+            if (respawnCount < int(ScriptPlayer.Score.NbRespawnsRequested)) {
                 // changing respawn count => time shift recalculated so that timer will be reset to last CP time
-                respawnCount = scriptPlayer.Score.NbRespawnsRequested;
+                respawnCount = ScriptPlayer.Score.NbRespawnsRequested;
                 timeShift = raceTime - lastCPTime;
 
                 if (!firstCP)
@@ -225,16 +226,15 @@ void Update(float dt) {
                     diffPB = FormatDiff(diff - timeShift);
             }
 
-            auto app = cast<CTrackMania>(GetApp());
-            auto map = app.RootMap;
+            CGameCtnChallenge@ Map = App.RootMap;
 
-            if (map.TMObjective_AuthorTime >= uint(raceTime - timeShift))
+            if (Map.TMObjective_AuthorTime >= uint(raceTime - timeShift))
                 medal = 4;
-            else if (map.TMObjective_GoldTime >= uint(raceTime - timeShift))
+            else if (Map.TMObjective_GoldTime >= uint(raceTime - timeShift))
                 medal = 3;
-            else if (map.TMObjective_SilverTime >= uint(raceTime - timeShift))
+            else if (Map.TMObjective_SilverTime >= uint(raceTime - timeShift))
                 medal = 2;
-            else if (map.TMObjective_BronzeTime >= uint(raceTime - timeShift))
+            else if (Map.TMObjective_BronzeTime >= uint(raceTime - timeShift))
                 medal = 1;
             else
                 medal = 0;
@@ -242,29 +242,34 @@ void Update(float dt) {
     }
 }
 
-int64 GetRaceTime(CSmScriptPlayer& scriptPlayer) {
-    if (scriptPlayer is null)
+int64 GetRaceTime(CSmScriptPlayer@ ScriptPlayer) {
+    if (ScriptPlayer is null)
         // not playing
         return 0;
 
-    auto playgroundScript = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript);
+    CTrackMania@ App = cast<CTrackMania@>(GetApp());
+    CTrackManiaNetwork@ Network = cast<CTrackManiaNetwork@>(App.Network);
+    CSmArenaRulesMode@ PlaygroundScript = cast<CSmArenaRulesMode@>(App.PlaygroundScript);
 
-    if (playgroundScript is null)
+    if (PlaygroundScript is null)
         // Online
-        return GetApp().Network.PlaygroundClientScriptAPI.GameTime - scriptPlayer.StartTime;
+        return Network.PlaygroundClientScriptAPI.GameTime - ScriptPlayer.StartTime;
     else
         // Solo
-        return playgroundScript.Now - scriptPlayer.StartTime;
+        return PlaygroundScript.Now - ScriptPlayer.StartTime;
 }
 
 int64 GetDiffPB() {
-    auto network = GetApp().Network;
+    CTrackMania@ App = cast<CTrackMania@>(GetApp());
+    CTrackManiaNetwork@ Network = cast<CTrackManiaNetwork@>(App.Network);
+    CGameManiaAppPlayground@ CMAP = Network.ClientManiaAppPlayground;
 
-    if (network.ClientManiaAppPlayground !is null && network.ClientManiaAppPlayground.UILayers.Length > 0) {
-        auto uilayers = network.ClientManiaAppPlayground.UILayers;
+    if (CMAP !is null && CMAP.UILayers.Length > 0) {
+        auto uilayers = CMAP.UILayers;
 
         for (uint i = 0; i < uilayers.Length; i++) {
             CGameUILayer@ curLayer = uilayers[i];
+
             int start = curLayer.ManialinkPageUtf8.IndexOf("<");
             int end = curLayer.ManialinkPageUtf8.IndexOf(">");
 
