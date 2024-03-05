@@ -212,14 +212,14 @@ void Update(float) {
             }
         }
 
-        if (respawnCount > 0 && raceTime >= timeShift)  // display timer only if at least one respawn
+        if (respawnCount > 0 && uint64(raceTime) >= timeShift)  // display timer only if at least one respawn
             infos = FormatTime(raceTime - timeShift);
 
     } else if (preCPIdx != -1) {
         preCPIdx = -1;
         firstCP = true;
 
-        if (respawnCount > 0 && raceTime >= timeShift) {
+        if (respawnCount > 0 && uint64(raceTime) >= timeShift) {
             infos = FormatTime(raceTime - timeShift) + " (" + respawnCount + " respawn" + (respawnCount > 1 ? "s" : "") + ")";
 
             if (S_CpDelta) {
