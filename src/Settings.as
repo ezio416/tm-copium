@@ -21,7 +21,13 @@ float S_Y = 0.987f;
 vec4 S_BackgroundColor = vec4(0.0f, 0.0f, 0.0f, 0.0f);
 
 [Setting category="Position/Style" name="Show drop shadow" description="disables background color"]
-bool S_DropShadow = true;
+bool S_Drop = true;
+
+[Setting category="Position/Style" name="Drop shadow color" color]
+vec4 S_DropColor = vec4(0.0f, 0.0f, 0.0f, 1.0f);
+
+[Setting category="Position/Style" name="Drop shadow offset" min=1 max=10]
+int S_DropOffset = 2;
 
 [Setting category="Position/Style" name="Font size" min=8 max=72]
 uint S_FontSize = 24;

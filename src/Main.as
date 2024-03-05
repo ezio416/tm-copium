@@ -41,7 +41,6 @@ void Render() {
         float bck_l = 0.0f;
         float bck_w = 0.0f;
         float y = S_Y * Draw::GetHeight() + 1.0f;
-        float shadowOffset = S_FontSize / 12.0f;
 
         if (medal > 0) {
             bck_w = S_FontSize * 3.0f - 4.0f;
@@ -51,9 +50,9 @@ void Render() {
         if (diffPB == "" || !S_CpDelta) {
             nvg::TextAlign(nvg::Align::Center | nvg::Align::Middle);
 
-            if (S_DropShadow) {
-                nvg::FillColor(vec4(0.0f, 0.0f, 0.0f, 1.0f));
-                nvg::TextBox(S_X * Draw::GetWidth() - w / 2.0f - 2.0f + shadowOffset, y + shadowOffset, w + 4.0f, infos);
+            if (S_Drop) {
+                nvg::FillColor(S_DropColor);
+                nvg::TextBox(S_X * Draw::GetWidth() - w / 2.0f - 2.0f + S_DropOffset, y + S_DropOffset, w + 4.0f, infos);
             } else {
                 nvg::BeginPath();
                 bck_l += S_X * Draw::GetWidth() - w / 2.0f - 3.0f;
@@ -74,9 +73,9 @@ void Render() {
             nvg::FontSize(S_FontSize);
             nvg::TextAlign(nvg::Align::Right | nvg::Align::Middle);
 
-            if (S_DropShadow) {
-                nvg::FillColor(vec4(0.0f, 0.0f, 0.0f, 1.0f));
-                nvg::TextBox(S_X * Draw::GetWidth() +center - w - 10.0f + shadowOffset, y + shadowOffset, w + 4.0f, infos);
+            if (S_Drop) {
+                nvg::FillColor(S_DropColor);
+                nvg::TextBox(S_X * Draw::GetWidth() + center - w - 10.0f + S_DropOffset, y + S_DropOffset, w + 4.0f, infos);
             } else {
                 nvg::BeginPath();
                 bck_l += S_X * Draw::GetWidth() + center - w - 8.0f;
@@ -104,16 +103,16 @@ void Render() {
             w += wd + 10.0f;
         }
 
-        if (medal >= 1) {
-            if (S_DropShadow) {
+        if (medal > 0) {
+            if (S_Drop) {
                 nvg::BeginPath();
-                nvg::Ellipse(vec2(S_X * Draw::GetWidth() - w / 2.0f - S_FontSize + shadowOffset, y - 1.0f + shadowOffset), S_FontSize / 2.5f, S_FontSize / 2.5f);
-                nvg::FillColor(vec4(0.0f, 0.0f, 0.0f, 1.0f));
+                nvg::Ellipse(vec2(S_X * Draw::GetWidth() - w / 2.0f - S_FontSize + S_DropOffset, y - 1.0f + S_DropOffset), S_FontSize / 2.5f, S_FontSize / 2.5f);
+                nvg::FillColor(S_DropColor);
                 nvg::Fill();
                 nvg::ClosePath();
                 nvg::BeginPath();
-                nvg::Ellipse(vec2(S_X * Draw::GetWidth() + w / 2.0f + S_FontSize + shadowOffset, y - 1.0f + shadowOffset), S_FontSize / 2.5f, S_FontSize / 2.5f);
-                nvg::FillColor(vec4(0.0f, 0.0f, 0.0f, 1.0f));
+                nvg::Ellipse(vec2(S_X * Draw::GetWidth() + w / 2.0f + S_FontSize + S_DropOffset, y - 1.0f + S_DropOffset), S_FontSize / 2.5f, S_FontSize / 2.5f);
+                nvg::FillColor(S_DropColor);
                 nvg::Fill();
                 nvg::ClosePath();
             }
