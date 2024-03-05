@@ -15,7 +15,7 @@ int          respawnCount = -1;
 uint64       timeShift    = 0;
 const string title        = "\\$09F" + Icons::Flag + "\\$G Better Copium Timer";
 
-const vec4[] medals = {
+const vec4[] medalColors = {
   vec4(0.0f,   0.0f,   0.0f,   0.0f),  // no medal
   vec4(0.604f, 0.400f, 0.259f, 1.0f),  // bronze medal
   vec4(0.537f, 0.604f, 0.604f, 1.0f),  // silver medal
@@ -42,6 +42,8 @@ void Render() {
         float bck_w = 0.0f;
         float y = S_Y * Draw::GetHeight() + 1.0f;
 
+        const float width = Draw::GetWidth() * S_X;
+
         if (medal > 0) {
             bck_w = S_FontSize * 3.0f - 4.0f;
             bck_l = -0.5f * bck_w;
@@ -52,19 +54,18 @@ void Render() {
 
             if (S_Drop) {
                 nvg::FillColor(S_DropColor);
-                nvg::TextBox(S_X * Draw::GetWidth() - w / 2.0f - 2.0f + S_DropOffset, y + S_DropOffset, w + 4.0f, infos);
+                nvg::TextBox(width - w / 2.0f - 2.0f + S_DropOffset, y + S_DropOffset, w + 4.0f, infos);
             } else {
                 nvg::BeginPath();
-                bck_l += S_X * Draw::GetWidth() - w / 2.0f - 3.0f;
+                bck_l += width - w / 2.0f - 3.0f;
                 bck_w += w + 6.0f;
                 nvg::Rect(bck_l, y - (S_FontSize - 2) / 2.0f - 3.0f, bck_w, S_FontSize + 2.0f);
                 nvg::FillColor(S_BackgroundColor);
                 nvg::Fill();
-                nvg::ClosePath();
             }
 
             nvg::FillColor(S_FontColor);
-            nvg::TextBox(S_X * Draw::GetWidth() - w / 2.0f - 2.0f, y, w + 4.0f, infos);
+            nvg::TextBox(width - w / 2.0f - 2.0f, y, w + 4.0f, infos);
         } else {
             nvg::FontSize(S_FontSize - 2.0f);
             float wd = nvg::TextBounds(diffPB).x;
@@ -75,30 +76,28 @@ void Render() {
 
             if (S_Drop) {
                 nvg::FillColor(S_DropColor);
-                nvg::TextBox(S_X * Draw::GetWidth() + center - w - 10.0f + S_DropOffset, y + S_DropOffset, w + 4.0f, infos);
+                nvg::TextBox(width + center - w - 10.0f + S_DropOffset, y + S_DropOffset, w + 4.0f, infos);
             } else {
                 nvg::BeginPath();
-                bck_l += S_X * Draw::GetWidth() + center - w - 8.0f;
+                bck_l += width + center - w - 8.0f;
                 bck_w += w + wd + 17.0f;
                 nvg::Rect(bck_l, y - (S_FontSize - 2) / 2.0f - 3.0f, bck_w, S_FontSize + 2.0f);
                 nvg::FillColor(S_BackgroundColor);
                 nvg::Fill();
-                nvg::ClosePath();
             }
 
             nvg::FillColor(S_FontColor);
-            nvg::TextBox(S_X * Draw::GetWidth() + center - w - 10.0f, y, w + 4.0f, infos);
+            nvg::TextBox(width + center - w - 10.0f, y, w + 4.0f, infos);
 
             nvg::BeginPath();
-            nvg::Rect(S_X * Draw::GetWidth() + center + 3.0f, y - (S_FontSize - 2) / 2.0f - 2.0f, wd + 5.0f, S_FontSize);
+            nvg::Rect(width + center + 3.0f, y - (S_FontSize - 2) / 2.0f - 2.0f, wd + 5.0f, S_FontSize);
             nvg::FillColor(diffPB.SubStr(0, 1) == "-" ? colorBlue : colorRed);
             nvg::Fill();
-            nvg::ClosePath();
 
             nvg::FontSize(S_FontSize - 2.0f);
             nvg::TextAlign(nvg::Align::Left | nvg::Align::Middle);
             nvg::FillColor(S_FontColor);
-            nvg::TextBox(S_X * Draw::GetWidth() + center + 6.0f, y + 1.0f, wd + 4.0f, diffPB);
+            nvg::TextBox(width + center + 6.0f, y + 1.0f, wd + 4.0f, diffPB);
 
             w += wd + 10.0f;
         }
@@ -106,27 +105,23 @@ void Render() {
         if (medal > 0) {
             if (S_Drop) {
                 nvg::BeginPath();
-                nvg::Circle(vec2(S_X * Draw::GetWidth() - w / 2.0f - S_FontSize + S_DropOffset, y - 1.0f + S_DropOffset), S_FontSize / 2.5f);
+                nvg::Circle(vec2(width - w / 2.0f - S_FontSize + S_DropOffset, y - 1.0f + S_DropOffset), S_FontSize / 2.5f);
                 nvg::FillColor(S_DropColor);
                 nvg::Fill();
-                nvg::ClosePath();
                 nvg::BeginPath();
-                nvg::Circle(vec2(S_X * Draw::GetWidth() + w / 2.0f + S_FontSize + S_DropOffset, y - 1.0f + S_DropOffset), S_FontSize / 2.5f);
+                nvg::Circle(vec2(width + w / 2.0f + S_FontSize + S_DropOffset, y - 1.0f + S_DropOffset), S_FontSize / 2.5f);
                 nvg::FillColor(S_DropColor);
                 nvg::Fill();
-                nvg::ClosePath();
             }
 
             nvg::BeginPath();
-            nvg::Circle(vec2(S_X * Draw::GetWidth() - w / 2.0f - S_FontSize, y - 1.0f), S_FontSize / 2.5f);
-            nvg::FillColor(medals[medal]);
+            nvg::Circle(vec2(width - w / 2.0f - S_FontSize, y - 1.0f), S_FontSize / 2.5f);
+            nvg::FillColor(medalColors[medal]);
             nvg::Fill();
-            nvg::ClosePath();
             nvg::BeginPath();
-            nvg::Circle(vec2(S_X * Draw::GetWidth() + w / 2.0f + S_FontSize, y - 1.0f), S_FontSize / 2.5f);
-            nvg::FillColor(medals[medal]);
+            nvg::Circle(vec2(width + w / 2.0f + S_FontSize, y - 1.0f), S_FontSize / 2.5f);
+            nvg::FillColor(medalColors[medal]);
             nvg::Fill();
-            nvg::ClosePath();
         }
     }
 }
