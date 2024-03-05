@@ -204,14 +204,14 @@ void Update(float) {
         }
 
         if (respawnCount > 0 && uint64(raceTime) >= timeShift)
-            infos = FormatTime(raceTime - timeShift);
+            infos = Time::Format(raceTime - timeShift);
 
     } else if (preCPIdx != -1) {
         preCPIdx = -1;
         firstCP = true;
 
         if (respawnCount > 0 && uint64(raceTime) >= timeShift) {
-            infos = FormatTime(raceTime - timeShift) + " (" + respawnCount + " respawn" + (respawnCount > 1 ? "s" : "") + ")";
+            infos = Time::Format(raceTime - timeShift) + " (" + respawnCount + " respawn" + (respawnCount > 1 ? "s" : "") + ")";
 
             if (S_CpDelta) {
                 int64 diff = GetDiffPB();
