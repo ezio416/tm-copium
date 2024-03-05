@@ -252,37 +252,36 @@ int64 GetDiffPB() {
     CTrackManiaNetwork@ Network = cast<CTrackManiaNetwork@>(App.Network);
     CGameManiaAppPlayground@ CMAP = Network.ClientManiaAppPlayground;
 
-    if (CMAP !is null && CMAP.UILayers.Length > 0) {
-        for (uint i = 0; i < CMAP.UILayers.Length; i++) {
-            CGameUILayer@ Layer = CMAP.UILayers[i];
-            if (Layer is null)
-                continue;
+    if (CMAP is null)
+        return 0;
 
-            string Page = string(Layer.ManialinkPage);
+    for (uint i = 0; i < CMAP.UILayers.Length; i++) {
+        CGameUILayer@ Layer = CMAP.UILayers[i];
+        if (Layer is null)
+            continue;
 
-            int start = Page.IndexOf("<");
-            int end = Page.IndexOf(">");
+        string Page = string(Layer.ManialinkPage);
 
-            if (start != -1 && end != -1) {
-                if (Page.SubStr(start, end).Contains("UIModule_Race_Checkpoint")) {
-                    CGameManialinkLabel@ Label = cast<CGameManialinkLabel@>(Layer.LocalPage.GetFirstChild("label-race-diff"));
+        int start = Page.IndexOf("<");
+        int end = Page.IndexOf(">");
 
-                    if (Label.Visible && Label.Parent.Visible) {  // reference lap not finished
-                        string diff = string(Label.Value);
-                        int64 res = 0;
+        if (start != -1 && end != -1 && Page.SubStr(start, end).Contains("UIModule_Race_Checkpoint")) {
+            CGameManialinkLabel@ Label = cast<CGameManialinkLabel@>(Layer.LocalPage.GetFirstChild("label-race-diff"));
+            if (Label is null || !Label.Visible || !Label.Parent.Visible)  // reference lap not finished
+                break;
 
-                        if (diff.Length == 10) {  // invalid format
-                            res = diff.SubStr(0, 1) == "-" ? -1 : 1;
-                            int min = Text::ParseInt(diff.SubStr(1, 2));
-                            int sec = Text::ParseInt(diff.SubStr(4, 2));
-                            int ms = Text::ParseInt(diff.SubStr(7, 3));
-                            res *= (min * 60000) + (sec * 1000) + ms;
-                        }
+            string diff = string(Label.Value);
+            int64 res = 0;
 
-                        return res;
-                    }
-                }
+            if (diff.Length == 10) {  // invalid format
+                res = diff.SubStr(0, 1) == "-" ? -1 : 1;
+                int min = Text::ParseInt(diff.SubStr(1, 2));
+                int sec = Text::ParseInt(diff.SubStr(4, 2));
+                int ms = Text::ParseInt(diff.SubStr(7, 3));
+                res *= (min * 60000) + (sec * 1000) + ms;
             }
+
+            return res;
         }
     }
 

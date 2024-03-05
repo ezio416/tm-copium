@@ -44,9 +44,6 @@ string FormatTime(uint64 time) {
 }
 
 int64 GetRaceTime(CSmScriptPlayer@ ScriptPlayer) {
-    if (ScriptPlayer is null)
-        return 0;
-
     CTrackMania@ App = cast<CTrackMania@>(GetApp());
     CTrackManiaNetwork@ Network = cast<CTrackManiaNetwork@>(App.Network);
     CSmArenaRulesMode@ PlaygroundScript = cast<CSmArenaRulesMode@>(App.PlaygroundScript);
