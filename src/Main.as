@@ -17,10 +17,10 @@ const string title        = "\\$09F" + Icons::Flag + "\\$G Better Copium Timer";
 
 const vec4[] medalColors = {
   vec4(0.0f,   0.0f,   0.0f,   0.0f),  // no medal
-  vec4(0.604f, 0.400f, 0.259f, 1.0f),  // bronze medal
-  vec4(0.537f, 0.604f, 0.604f, 1.0f),  // silver medal
-  vec4(0.871f, 0.737f, 0.259f, 1.0f),  // gold medal
-  vec4(0.000f, 0.471f, 0.035f, 1.0f),  // author medal
+  vec4(0.604f, 0.400f, 0.259f, 1.0f),  // bronze
+  vec4(0.537f, 0.604f, 0.604f, 1.0f),  // silver
+  vec4(0.871f, 0.737f, 0.259f, 1.0f),  // gold
+  vec4(0.000f, 0.471f, 0.035f, 1.0f)   // author
 };
 
 void Main() {
@@ -168,12 +168,10 @@ void Update(float) {
         }
     }
 
-    // in game only if interface displayed or don't care
     inGame = !S_HideWithGame || UI::IsGameUIVisible();
 
     if (Playground.GameTerminals[0].UISequence_Current == CGamePlaygroundUIConfig::EUISequence::Playing) {
         if (preCPIdx == -1) {
-            // starting => no time shift, no respawn yet
             lastCPTime = timeShift = respawnCount = 0;
             infos = "";
             diffPB = "";
@@ -182,32 +180,26 @@ void Update(float) {
             firstCP = true;
         } else {
             if (preCPIdx != int(Player.CurrentLaunchedRespawnLandmarkIndex)) {
-                // changing CP => save last CP time with time shift
                 preCPIdx = Player.CurrentLaunchedRespawnLandmarkIndex;
                 firstCP = false;
                 lastCPTime = raceTime - timeShift;
 
                 if (respawnCount > 0 && S_CpDelta) {
                     int64 diff = GetDiffPB();
-
-                    if (diff == 0)
-                        diffPB = "";
-                    else
-                        diffPB = FormatDiff(diff - timeShift);
+                    diffPB = diff == 0 ? "" : FormatDiff(diff - timeShift);
                 }
             }
 
             if (respawnCount < int(ScriptPlayer.Score.NbRespawnsRequested)) {
-                // changing respawn count => time shift recalculated so that timer will be reset to last CP time
                 respawnCount = ScriptPlayer.Score.NbRespawnsRequested;
                 timeShift = raceTime - lastCPTime;
 
                 if (!firstCP)
-                    timeShift += 1000;  // 1000 = 3 - 2 - 1 delay (not applicable on first CP)
+                    timeShift += 1000;
             }
         }
 
-        if (respawnCount > 0 && uint64(raceTime) >= timeShift)  // display timer only if at least one respawn
+        if (respawnCount > 0 && uint64(raceTime) >= timeShift)
             infos = FormatTime(raceTime - timeShift);
 
     } else if (preCPIdx != -1) {
@@ -219,14 +211,11 @@ void Update(float) {
 
             if (S_CpDelta) {
                 int64 diff = GetDiffPB();
-
-                if (diff == 0)
-                    diffPB = "";
-                else
-                    diffPB = FormatDiff(diff - timeShift);
+                diffPB = diff == 0 ? "" : FormatDiff(diff - timeShift);
             }
 
             CGameCtnChallenge@ Map = App.RootMap;
+            medal = 0;
 
             if (Map.TMObjective_AuthorTime >= uint(raceTime - timeShift))
                 medal = 4;
@@ -236,8 +225,6 @@ void Update(float) {
                 medal = 2;
             else if (Map.TMObjective_BronzeTime >= uint(raceTime - timeShift))
                 medal = 1;
-            else
-                medal = 0;
         }
     }
 }
@@ -262,13 +249,13 @@ int64 GetDiffPB() {
 
         if (start != -1 && end != -1 && Page.SubStr(start, end).Contains("UIModule_Race_Checkpoint")) {
             CGameManialinkLabel@ Label = cast<CGameManialinkLabel@>(Layer.LocalPage.GetFirstChild("label-race-diff"));
-            if (Label is null || !Label.Visible || !Label.Parent.Visible)  // reference lap not finished
+            if (Label is null || !Label.Visible || !Label.Parent.Visible)
                 break;
 
             string diff = string(Label.Value);
             int64 res = 0;
 
-            if (diff.Length == 10) {  // invalid format
+            if (diff.Length == 10) {
                 res = diff.SubStr(0, 1) == "-" ? -1 : 1;
                 int min = Text::ParseInt(diff.SubStr(1, 2));
                 int sec = Text::ParseInt(diff.SubStr(4, 2));
