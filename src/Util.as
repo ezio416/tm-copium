@@ -43,17 +43,6 @@ string FormatTime(uint64 time) {
     return str;
 }
 
-int64 GetRaceTime(CSmScriptPlayer@ ScriptPlayer) {
-    CTrackMania@ App = cast<CTrackMania@>(GetApp());
-    CTrackManiaNetwork@ Network = cast<CTrackManiaNetwork@>(App.Network);
-    CSmArenaRulesMode@ PlaygroundScript = cast<CSmArenaRulesMode@>(App.PlaygroundScript);
-
-    if (PlaygroundScript is null)  // on server
-        return Network.PlaygroundClientScriptAPI.GameTime - ScriptPlayer.StartTime;
-    else
-        return PlaygroundScript.Now - ScriptPlayer.StartTime;
-}
-
 string ZPad2(int number) {
     return (number < 10 ? "0" : "") + number;
 }

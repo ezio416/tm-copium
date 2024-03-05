@@ -129,6 +129,7 @@ void Render() {
 
 void Update(float) {
     CTrackMania@ App = cast<CTrackMania@>(GetApp());
+    CTrackManiaNetwork@ Network = cast<CTrackManiaNetwork@>(App.Network);
     CSmArenaClient@ Playground = cast<CSmArenaClient@>(App.CurrentPlayground);
     CGamePlaygroundUIConfig::EUISequence Sequence = Playground.UIConfigs[0].UISequence;
 
@@ -141,6 +142,7 @@ void Update(float) {
         || (Sequence != CGamePlaygroundUIConfig::EUISequence::Playing
             && Sequence != CGamePlaygroundUIConfig::EUISequence::Finish
             && Sequence != CGamePlaygroundUIConfig::EUISequence::EndRound)
+        || Network.PlaygroundClientScriptAPI is null
     ) {
         inGame = false;
         preCPIdx = -1;
@@ -160,7 +162,7 @@ void Update(float) {
             return;
         }
 
-        raceTime = GetRaceTime(ScriptPlayer);
+        raceTime = Network.PlaygroundClientScriptAPI.GameTime - ScriptPlayer.StartTime;
 
         if (Player.CurrentLaunchedRespawnLandmarkIndex == uint(-1) || raceTime <= 0) {
             inGame = false;
