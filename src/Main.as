@@ -106,24 +106,24 @@ void Render() {
         if (medal > 0) {
             if (S_Drop) {
                 nvg::BeginPath();
-                nvg::Ellipse(vec2(S_X * Draw::GetWidth() - w / 2.0f - S_FontSize + S_DropOffset, y - 1.0f + S_DropOffset), S_FontSize / 2.5f, S_FontSize / 2.5f);
+                nvg::Circle(vec2(S_X * Draw::GetWidth() - w / 2.0f - S_FontSize + S_DropOffset, y - 1.0f + S_DropOffset), S_FontSize / 2.5f);
                 nvg::FillColor(S_DropColor);
                 nvg::Fill();
                 nvg::ClosePath();
                 nvg::BeginPath();
-                nvg::Ellipse(vec2(S_X * Draw::GetWidth() + w / 2.0f + S_FontSize + S_DropOffset, y - 1.0f + S_DropOffset), S_FontSize / 2.5f, S_FontSize / 2.5f);
+                nvg::Circle(vec2(S_X * Draw::GetWidth() + w / 2.0f + S_FontSize + S_DropOffset, y - 1.0f + S_DropOffset), S_FontSize / 2.5f);
                 nvg::FillColor(S_DropColor);
                 nvg::Fill();
                 nvg::ClosePath();
             }
 
             nvg::BeginPath();
-            nvg::Ellipse(vec2(S_X * Draw::GetWidth() - w / 2.0f - S_FontSize, y - 1.0f), S_FontSize / 2.5f, S_FontSize / 2.5f);
+            nvg::Circle(vec2(S_X * Draw::GetWidth() - w / 2.0f - S_FontSize, y - 1.0f), S_FontSize / 2.5f);
             nvg::FillColor(medals[medal]);
             nvg::Fill();
             nvg::ClosePath();
             nvg::BeginPath();
-            nvg::Ellipse(vec2(S_X * Draw::GetWidth() + w / 2.0f + S_FontSize, y - 1.0f), S_FontSize / 2.5f, S_FontSize / 2.5f);
+            nvg::Circle(vec2(S_X * Draw::GetWidth() + w / 2.0f + S_FontSize, y - 1.0f), S_FontSize / 2.5f);
             nvg::FillColor(medals[medal]);
             nvg::Fill();
             nvg::ClosePath();
