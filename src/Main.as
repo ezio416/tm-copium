@@ -130,15 +130,17 @@ void Render() {
 void Update(float) {
     CTrackMania@ App = cast<CTrackMania@>(GetApp());
     CSmArenaClient@ Playground = cast<CSmArenaClient@>(App.CurrentPlayground);
+    CGamePlaygroundUIConfig::EUISequence Sequence = Playground.UIConfigs[0].UISequence;
 
     if (
         Playground is null
         || Playground.Arena is null
         || Playground.Map is null
         || Playground.GameTerminals.Length == 0
-        || (Playground.GameTerminals[0].UISequence_Current != CGamePlaygroundUIConfig::EUISequence::Playing
-            && Playground.GameTerminals[0].UISequence_Current != CGamePlaygroundUIConfig::EUISequence::Finish
-            && Playground.GameTerminals[0].UISequence_Current != CGamePlaygroundUIConfig::EUISequence::EndRound)
+        || Playground.GameTerminals[0] is null
+        || (Sequence != CGamePlaygroundUIConfig::EUISequence::Playing
+            && Sequence != CGamePlaygroundUIConfig::EUISequence::Finish
+            && Sequence != CGamePlaygroundUIConfig::EUISequence::EndRound)
     ) {
         inGame = false;
         preCPIdx = -1;
@@ -150,7 +152,7 @@ void Update(float) {
     CSmScriptPlayer@ ScriptPlayer = Player is null ? null : cast<CSmScriptPlayer@>(Player.ScriptAPI);
     int64 raceTime = 0;
 
-    if (Playground.GameTerminals[0].UISequence_Current != CGamePlaygroundUIConfig::EUISequence::EndRound) {
+    if (Sequence != CGamePlaygroundUIConfig::EUISequence::EndRound) {
         if (ScriptPlayer is null) {
             inGame = false;
             preCPIdx = -1;
