@@ -1,4 +1,3 @@
-#if TMNEXT
 [Setting name="Show timer"]
 bool showTimer = true;
 
@@ -397,12 +396,3 @@ string PadNumber(int number)
     else
         return "" + number;
 }
-
-#else
-
-void Main()
-{
-    print("This plugin only works with TM 2020 !");
-}
-
-#endif
