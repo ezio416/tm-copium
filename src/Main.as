@@ -109,24 +109,38 @@ void Render() {
     }
 
     if (medal > 0) {
+        // if (S_Background) {
+        //     nvg::FillColor(S_BackgroundColor);
+        //     nvg::BeginPath();
+        //     nvg::RoundedRect(
+        //         width - size.x * 0.5f - S_BackgroundXPad,
+        //         height - size.y * 0.5f - S_BackgroundYPad - 2.0f,
+        //         size.x + S_BackgroundXPad * 2.0f,
+        //         size.y + S_BackgroundYPad * 2.0f,
+        //         S_BackgroundRadius
+        //     );
+        //     nvg::Fill();
+        // }
+
+        const float circleRadius = S_FontSize / 2.5f;
+        const float y = height - S_FontSize / 12.0f;
+
         if (S_Drop) {
             nvg::BeginPath();
-            nvg::Circle(vec2(width - w / 2.0f - S_FontSize + S_DropOffset, height - 1.0f + S_DropOffset), S_FontSize / 2.5f);
+            nvg::Circle(vec2(width - w / 2.0f - S_FontSize + S_DropOffset, y + S_DropOffset), circleRadius);
             nvg::FillColor(S_DropColor);
             nvg::Fill();
             nvg::BeginPath();
-            nvg::Circle(vec2(width + w / 2.0f + S_FontSize + S_DropOffset, height - 1.0f + S_DropOffset), S_FontSize / 2.5f);
-            nvg::FillColor(S_DropColor);
+            nvg::Circle(vec2(width + w / 2.0f + S_FontSize + S_DropOffset, y + S_DropOffset), circleRadius);
             nvg::Fill();
         }
 
         nvg::BeginPath();
-        nvg::Circle(vec2(width - w / 2.0f - S_FontSize, height - 1.0f), S_FontSize / 2.5f);
+        nvg::Circle(vec2(width - w / 2.0f - S_FontSize, y), circleRadius);
         nvg::FillColor(medalColors[medal]);
         nvg::Fill();
         nvg::BeginPath();
-        nvg::Circle(vec2(width + w / 2.0f + S_FontSize, height - 1.0f), S_FontSize / 2.5f);
-        nvg::FillColor(medalColors[medal]);
+        nvg::Circle(vec2(width + w / 2.0f + S_FontSize, y), circleRadius);
         nvg::Fill();
     }
 }
