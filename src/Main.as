@@ -40,7 +40,7 @@ void Render() {
         float w = infos.Length < 12 ? infos.Length * S_FontSize * 0.5f : nvg::TextBounds(infos).x;
         float bck_l = 0.0f;
         float bck_w = 0.0f;
-        float y = S_X * Draw::GetHeight() + 1.0f;
+        float y = S_Y * Draw::GetHeight() + 1.0f;
         float shadowOffset = S_FontSize / 12.0f;
 
         if (medal > 0) {
