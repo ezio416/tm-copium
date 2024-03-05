@@ -1,16 +1,16 @@
-bool inGame = false;
-int preCPIdx = -1;
-bool firstCP = true;
-uint64 lastCPTime = 0;
-int respawnCount = -1;
-uint64 timeShift = 0;
-
-vec4 colorBlue = vec4(0, 0, 0.8, 0.8);
-vec4 colorRed = vec4(0.8, 0, 0, 0.8);
-
-string infos;
-string diffPB;
-int medal = -1;
+const vec4   colorBlue    = vec4(0, 0, 0.8, 0.8);
+const vec4   colorRed     = vec4(0.8, 0, 0, 0.8);
+string       diffPB;
+bool         firstCP      = true;
+nvg::Font    font;
+string       infos;
+bool         inGame       = false;
+uint64       lastCPTime   = 0;
+int          medal        = -1;
+int          preCPIdx     = -1;
+int          respawnCount = -1;
+uint64       timeShift    = 0;
+const string title        = "\\$09F" + Icons::Flag + "\\$Z Better Copium Timer";
 
 const array<vec4> medals = {
   vec4(0, 0, 0, 0), // no medal
@@ -20,14 +20,12 @@ const array<vec4> medals = {
   vec4(0.000, 0.471, 0.035, 1), // author medal
 };
 
-nvg::Font font;
-
 void Main() {
     font = nvg::LoadFont("DroidSans-Bold.ttf", true);
 }
 
 void RenderMenu() {
-    if (UI::MenuItem("\\$09f" + Icons::Flag + "\\$z No-Respawn Timer", "", showTimer))
+    if (UI::MenuItem(title, "", showTimer))
         showTimer = !showTimer;
 }
 
