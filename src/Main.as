@@ -224,6 +224,7 @@ void Update(float) {
 
             if (S_CpDelta) {
                 int64 diff = GetDiffPB();
+
                 if (diff == 0)
                     diffPB = "";
                 else
@@ -252,26 +253,26 @@ int64 GetDiffPB() {
     CGameManiaAppPlayground@ CMAP = Network.ClientManiaAppPlayground;
 
     if (CMAP !is null && CMAP.UILayers.Length > 0) {
-        auto uilayers = CMAP.UILayers;
+        for (uint i = 0; i < CMAP.UILayers.Length; i++) {
+            CGameUILayer@ Layer = CMAP.UILayers[i];
+            if (Layer is null)
+                continue;
 
-        for (uint i = 0; i < uilayers.Length; i++) {
-            CGameUILayer@ curLayer = uilayers[i];
+            string Page = string(Layer.ManialinkPage);
 
-            int start = curLayer.ManialinkPageUtf8.IndexOf("<");
-            int end = curLayer.ManialinkPageUtf8.IndexOf(">");
+            int start = Page.IndexOf("<");
+            int end = Page.IndexOf(">");
 
             if (start != -1 && end != -1) {
-                auto manialinkname = curLayer.ManialinkPageUtf8.SubStr(start, end);
+                if (Page.SubStr(start, end).Contains("UIModule_Race_Checkpoint")) {
+                    CGameManialinkLabel@ Label = cast<CGameManialinkLabel@>(Layer.LocalPage.GetFirstChild("label-race-diff"));
 
-                if (manialinkname.Contains("UIModule_Race_Checkpoint")) {
-                    auto c = cast<CGameManialinkLabel@>(curLayer.LocalPage.GetFirstChild("label-race-diff"));
-
-                    if (c.Visible && c.Parent.Visible) {  // reference lap not finished
-                        string diff = c.Value;
+                    if (Label.Visible && Label.Parent.Visible) {  // reference lap not finished
+                        string diff = string(Label.Value);
                         int64 res = 0;
 
                         if (diff.Length == 10) {  // invalid format
-                            res = diff.SubStr(0,1) == "-" ? -1 : 1;
+                            res = diff.SubStr(0, 1) == "-" ? -1 : 1;
                             int min = Text::ParseInt(diff.SubStr(1, 2));
                             int sec = Text::ParseInt(diff.SubStr(4, 2));
                             int ms = Text::ParseInt(diff.SubStr(7, 3));
