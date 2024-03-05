@@ -22,21 +22,17 @@ const array<vec4> medals = {
 
 nvg::Font font;
 
-void Main()
-{
+void Main() {
     font = nvg::LoadFont("DroidSans-Bold.ttf", true);
 }
 
-void RenderMenu()
-{
+void RenderMenu() {
     if (UI::MenuItem("\\$09f" + Icons::Flag + "\\$z No-Respawn Timer", "", showTimer))
         showTimer = !showTimer;
 }
 
-void Render()
-{
-    if (showTimer && inGame && infos != "")
-    {
+void Render() {
+    if (showTimer && inGame && infos != "") {
         nvg::FontFace(font);
         nvg::FontSize(fontSize);
         float w = infos.Length < 12 ? infos.Length * fontSize * 0.5 : nvg::TextBounds(infos).x;
@@ -44,21 +40,16 @@ void Render()
         float bck_w = 0;
         float y = anchorY * Draw::GetHeight() + 1;
         float shadowOffset = fontSize / 12.0;
-        if (medal >= 1)
-        {
+        if (medal >= 1) {
             bck_w = fontSize * 3 - 4;
             bck_l = -0.5 * bck_w;
         }
-        if (diffPB == "" || !cpDelta)
-        {
+        if (diffPB == "" || !cpDelta) {
             nvg::TextAlign(nvg::Align::Center | nvg::Align::Middle);
-            if (showDropShadow)
-            {
+            if (showDropShadow) {
                 nvg::FillColor(vec4(0, 0, 0, 1));
                 nvg::TextBox(anchorX * Draw::GetWidth() - w / 2 - 2 + shadowOffset, y + shadowOffset, w + 4, infos);
-            }
-            else
-            {
+            } else {
                 nvg::BeginPath();
                 bck_l += anchorX * Draw::GetWidth() - w / 2 - 3;
                 bck_w += w + 6;
@@ -70,22 +61,17 @@ void Render()
 
             nvg::FillColor(colorNormal);
             nvg::TextBox(anchorX * Draw::GetWidth() - w / 2 - 2, y, w + 4, infos);
-        }
-        else
-        {
+        } else {
             nvg::FontSize(fontSize - 2);
             float wd = nvg::TextBounds(diffPB).x;
             float center = (w - wd) / 2;
 
             nvg::FontSize(fontSize);
             nvg::TextAlign(nvg::Align::Right | nvg::Align::Middle);
-            if (showDropShadow)
-            {
+            if (showDropShadow) {
                 nvg::FillColor(vec4(0, 0, 0, 1));
                 nvg::TextBox(anchorX * Draw::GetWidth() +center - w - 10 + shadowOffset, y + shadowOffset, w + 4, infos);
-            }
-            else
-            {
+            } else {
                 nvg::BeginPath();
                 bck_l += anchorX * Draw::GetWidth() + center - w - 8;
                 bck_w += w + wd + 17;
@@ -112,10 +98,8 @@ void Render()
             w += wd + 10;
         }
 
-        if (medal >= 1)
-        {
-            if (showDropShadow)
-            {
+        if (medal >= 1) {
+            if (showDropShadow) {
                 nvg::BeginPath();
                 nvg::Ellipse(vec2(anchorX * Draw::GetWidth() - w / 2 - fontSize + shadowOffset, y - 1 + shadowOffset), fontSize / 2.5, fontSize / 2.5);
                 nvg::FillColor(vec4(0, 0, 0, 1));
@@ -142,18 +126,18 @@ void Render()
     }
 }
 
-void Update(float dt)
-{
+void Update(float dt) {
     auto playground = cast<CSmArenaClient>(GetApp().CurrentPlayground);
 
-    if (playground is null
+    if (
+        playground is null
         || playground.Arena is null
         || playground.Map is null
         || playground.GameTerminals.Length <= 0
         || (playground.GameTerminals[0].UISequence_Current != CGamePlaygroundUIConfig::EUISequence::Playing
             && playground.GameTerminals[0].UISequence_Current != CGamePlaygroundUIConfig::EUISequence::Finish
-            && playground.GameTerminals[0].UISequence_Current != CGamePlaygroundUIConfig::EUISequence::EndRound) )
-    {
+            && playground.GameTerminals[0].UISequence_Current != CGamePlaygroundUIConfig::EUISequence::EndRound)
+    ) {
         inGame = false;
         preCPIdx = -1;
         firstCP = true;
@@ -164,10 +148,8 @@ void Update(float dt)
     auto scriptPlayer = player is null ? null : cast<CSmScriptPlayer>(player.ScriptAPI);
     int64 raceTime = 0;
 
-    if (playground.GameTerminals[0].UISequence_Current != CGamePlaygroundUIConfig::EUISequence::EndRound)
-    {
-        if (scriptPlayer is null)
-        {
+    if (playground.GameTerminals[0].UISequence_Current != CGamePlaygroundUIConfig::EUISequence::EndRound) {
+        if (scriptPlayer is null) {
             inGame = false;
             preCPIdx = -1;
             firstCP = true;
@@ -176,8 +158,7 @@ void Update(float dt)
 
         raceTime = GetRaceTime(scriptPlayer);
 
-        if (player.CurrentLaunchedRespawnLandmarkIndex == uint(-1) || raceTime <= 0)
-        {
+        if (player.CurrentLaunchedRespawnLandmarkIndex == uint(-1) || raceTime <= 0) {
             inGame = false;
             preCPIdx = -1;
             firstCP = true;
@@ -188,10 +169,8 @@ void Update(float dt)
     // in game only if interface displayed or don't care
     inGame = !hideTimerWithIFace || UI::IsGameUIVisible();
 
-    if (playground.GameTerminals[0].UISequence_Current == CGamePlaygroundUIConfig::EUISequence::Playing)
-    {
-        if (preCPIdx == -1)
-        {
+    if (playground.GameTerminals[0].UISequence_Current == CGamePlaygroundUIConfig::EUISequence::Playing) {
+        if (preCPIdx == -1) {
             // starting => no time shift, no respawn yet
             lastCPTime = timeShift = respawnCount = 0;
             infos = "";
@@ -199,17 +178,13 @@ void Update(float dt)
             medal = -1;
             preCPIdx = player.CurrentLaunchedRespawnLandmarkIndex;
             firstCP = true;
-        }
-        else
-        {
-            if (preCPIdx != int(player.CurrentLaunchedRespawnLandmarkIndex))
-            {
+        } else {
+            if (preCPIdx != int(player.CurrentLaunchedRespawnLandmarkIndex)) {
                 // changing CP => save last CP time with time shift
                 preCPIdx = player.CurrentLaunchedRespawnLandmarkIndex;
                 firstCP = false;
                 lastCPTime = raceTime - timeShift;
-                if (respawnCount > 0 && cpDelta)
-                {
+                if (respawnCount > 0 && cpDelta) {
                     int64 diff = GetDiffPB();
                     if (diff == 0)
                         diffPB = "";
@@ -217,8 +192,7 @@ void Update(float dt)
                         diffPB = FormatDiff(diff - timeShift);
                 }
             }
-            if (respawnCount < int(scriptPlayer.Score.NbRespawnsRequested))
-            {
+            if (respawnCount < int(scriptPlayer.Score.NbRespawnsRequested)) {
                 // changing respawn count => time shift recalculated so that timer will be reset to last CP time
                 respawnCount = scriptPlayer.Score.NbRespawnsRequested;
                 timeShift = raceTime - lastCPTime;
@@ -230,16 +204,12 @@ void Update(float dt)
         if (respawnCount > 0 && raceTime >= timeShift)
             // display timer only if at least one respawn
             infos = FormatTime(raceTime - timeShift);
-    }
-    else if (preCPIdx != -1)
-    {
+    } else if (preCPIdx != -1) {
         preCPIdx = -1;
         firstCP = true;
-        if (respawnCount > 0 && raceTime >= timeShift)
-        {
+        if (respawnCount > 0 && raceTime >= timeShift) {
             infos = FormatTime(raceTime - timeShift) + " (" + respawnCount + " respawn" + (respawnCount > 1 ? "s" : "") + ")";
-            if (cpDelta)
-            {
+            if (cpDelta) {
                 int64 diff = GetDiffPB();
                 if (diff == 0)
                     diffPB = "";
@@ -263,8 +233,7 @@ void Update(float dt)
     }
 }
 
-int64 GetRaceTime(CSmScriptPlayer& scriptPlayer)
-{
+int64 GetRaceTime(CSmScriptPlayer& scriptPlayer) {
     if (scriptPlayer is null)
         // not playing
         return 0;
@@ -279,32 +248,24 @@ int64 GetRaceTime(CSmScriptPlayer& scriptPlayer)
         return playgroundScript.Now - scriptPlayer.StartTime;
 }
 
-int64 GetDiffPB()
-{
+int64 GetDiffPB() {
     auto network = GetApp().Network;
 
-    if (network.ClientManiaAppPlayground !is null &&
-        network.ClientManiaAppPlayground.UILayers.Length > 0)
-    {
+    if (network.ClientManiaAppPlayground !is null && network.ClientManiaAppPlayground.UILayers.Length > 0) {
         auto uilayers = network.ClientManiaAppPlayground.UILayers;
 
-        for (uint i = 0; i < uilayers.Length; i++)
-        {
+        for (uint i = 0; i < uilayers.Length; i++) {
             CGameUILayer@ curLayer = uilayers[i];
             int start = curLayer.ManialinkPageUtf8.IndexOf("<");
             int end = curLayer.ManialinkPageUtf8.IndexOf(">");
-            if (start != -1 && end != -1)
-            {
+            if (start != -1 && end != -1) {
                 auto manialinkname = curLayer.ManialinkPageUtf8.SubStr(start, end);
-                if (manialinkname.Contains("UIModule_Race_Checkpoint"))
-                {
+                if (manialinkname.Contains("UIModule_Race_Checkpoint")) {
                     auto c = cast<CGameManialinkLabel@>(curLayer.LocalPage.GetFirstChild("label-race-diff"));
-                    if (c.Visible && c.Parent.Visible) // reference lap not finished
-                    {
+                    if (c.Visible && c.Parent.Visible) {  // reference lap not finished
                         string diff = c.Value;
                         int64 res = 0;
-                        if (diff.Length == 10) // invalid format
-                        {
+                        if (diff.Length == 10) {  // invalid format
                             res = diff.SubStr(0,1) == "-" ? -1 : 1;
                             int min = Text::ParseInt(diff.SubStr(1, 2));
                             int sec = Text::ParseInt(diff.SubStr(4, 2));
@@ -321,8 +282,7 @@ int64 GetDiffPB()
     return 0;
 }
 
-string FormatTime(uint64 time)
-{
+string FormatTime(uint64 time) {
     string str = "";
     double tm = time / 1000.0;
 
@@ -339,11 +299,9 @@ string FormatTime(uint64 time)
     return str;
 }
 
-string FormatDiff(int64 time)
-{
+string FormatDiff(int64 time) {
     string str = "+";
-    if (time < 0)
-    {
+    if (time < 0) {
         str = "-";
         time *= -1;
     }
@@ -362,8 +320,7 @@ string FormatDiff(int64 time)
     return str;
 }
 
-string PadNumber(int number)
-{
+string PadNumber(int number) {
     if (number < 10)
         return "0" + number;
     else
