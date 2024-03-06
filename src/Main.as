@@ -1,5 +1,5 @@
 // c 2024-03-05
-// m 2024-03-05
+// m 2024-03-06
 
 string       myName;
 const string title = "\\$FA0" + Icons::Flag + "\\$G Better Copium Timer";
