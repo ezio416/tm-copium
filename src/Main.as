@@ -1,25 +1,8 @@
 // c 2024-03-05
 // m 2024-03-05
 
-string       diffPB;
-bool         firstCP      = true;
-string       infos;
-bool         inGame       = false;
-uint64       lastCPTime   = 0;
-int          medal        = -1;
 string       myName;
-int          preCPIdx     = -1;
-int          respawnCount = -1;
-uint64       timeShift    = 0;
-const string title        = "\\$FA0" + Icons::Flag + "\\$G Better Copium Timer";
-
-const vec4[] medalColors = {
-  vec4(0.0f,   0.0f,   0.0f,   0.0f),  // no medal
-  vec4(0.604f, 0.400f, 0.259f, 1.0f),  // bronze
-  vec4(0.537f, 0.604f, 0.604f, 1.0f),  // silver
-  vec4(0.871f, 0.737f, 0.259f, 1.0f),  // gold
-  vec4(0.000f, 0.471f, 0.035f, 1.0f)   // author
-};
+const string title = "\\$FA0" + Icons::Flag + "\\$G Better Copium Timer";
 
 void Main() {
     CTrackMania@ App = cast<CTrackMania@>(GetApp());
@@ -76,53 +59,7 @@ void Render() {
     else if (theoreticalTime < 0)
         theoreticalTime = 0;
 
-    string text = Time::Format(theoreticalTime);
-
-    uint[] bestCpTimes;
-
-    const MLFeed::GhostInfo_V2@ pbGhost = null;
-
-    const MLFeed::SharedGhostDataHook_V2@ ghostData = MLFeed::GetGhostData();
-    for (uint i = 0; i < ghostData.Ghosts_V2.Length; i++) {
-        const MLFeed::GhostInfo_V2@ ghost = ghostData.Ghosts_V2[i];
-        if (ghost.Nickname == "Personal best") {
-            @pbGhost = ghost;
-            break;
-        }
-    }
-
-    if (pbGhost !is null)
-        bestCpTimes = pbGhost.Checkpoints;
-    else if (cpInfo.BestRaceTimes.Length == raceData.CPsToFinish)
-        bestCpTimes = cpInfo.BestRaceTimes;
-
-    if (cpInfo.cpCount == int(raceData.CPsToFinish) && cpInfo.NbRespawnsRequested > 0)
-        text += " (" + cpInfo.NbRespawnsRequested + " respawn" + (cpInfo.NbRespawnsRequested == 1 ? "" : "s") + ")";
-
-    if (bestCpTimes.Length > 0) {
-        uint lastBestTime = bestCpTimes[cpInfo.cpTimes.Length - 2];
-        string diff = TimeFormat(cpInfo.lastCpTime - lastBestTime - TimeLostToAllButLastCp(cpInfo.TimeLostToRespawnByCp));
-        text += " (" + diff + ")";
-    }
-
-    nvg::FontSize(S_FontSize);
-    nvg::FontFace(font);
-    nvg::TextAlign(nvg::Align::Center | nvg::Align::Middle);
-
-    const vec2 size = nvg::TextBounds(text);
-
-    const float posX = Draw::GetWidth() * S_X;
-    const float posY = Draw::GetHeight() * S_Y;
-
-    if (S_Drop) {
-        nvg::FillColor(S_DropColor);
-        nvg::Text(posX + S_DropOffset, posY + S_DropOffset, text);
-    }
-
-    nvg::FillColor(S_FontColor);
-    nvg::Text(posX, posY, text);
-
-    medal = 0;
+    int medal = 0;
 
     if (cpInfo.cpCount == int(raceData.CPsToFinish)) {
         if (theoreticalTime <= int(App.RootMap.TMObjective_AuthorTime))
@@ -135,104 +72,107 @@ void Render() {
             medal = 1;
     }
 
-    // float bck_l = 0.0f;
-    // float bck_w = 0.0f;
-    // float w = infos.Length < 12 ? infos.Length * S_FontSize * 0.5f : nvg::TextBounds(infos).x;
+    nvg::FontSize(S_FontSize);
+    nvg::FontFace(font);
+    nvg::TextAlign(nvg::Align::Center | nvg::Align::Middle);
 
-    const float width = Draw::GetWidth() * S_X;
-    const float height = Draw::GetHeight() * S_Y + 1.0f;
+    string text = Time::Format(theoreticalTime);
 
-    // if (medal > 0) {
-    //     bck_w = S_FontSize * 3.0f - 4.0f;
-    //     bck_l = -0.5f * bck_w;
-    // }
+    uint[] bestCpTimes;
 
-    // if (diffPB == "" || !S_CpDelta) {
-    //     nvg::TextAlign(nvg::Align::Center | nvg::Align::Middle);
+    const MLFeed::GhostInfo_V2@ pbGhost = null;
 
-    //     if (S_Drop) {
-    //         nvg::FillColor(S_DropColor);
-    //         nvg::TextBox(width - w / 2.0f - 2.0f + S_DropOffset, height + S_DropOffset, w + 4.0f, infos);
-    //     } else {
-    //         nvg::BeginPath();
-    //         nvg::FillColor(S_BackgroundColor);
-    //         bck_l += width - w / 2.0f - 3.0f;
-    //         bck_w += w + 6.0f;
-    //         nvg::Rect(bck_l, height - (S_FontSize - 2) / 2.0f - 3.0f, bck_w, S_FontSize + 2.0f);
-    //         nvg::Fill();
-    //     }
+    const MLFeed::SharedGhostDataHook_V2@ ghostData = MLFeed::GetGhostData();
+    for (uint i = 0; i < ghostData.Ghosts_V2.Length; i++) {
+        const MLFeed::GhostInfo_V2@ ghost = ghostData.Ghosts_V2[i];
 
-    //     nvg::FillColor(S_FontColor);
-    //     nvg::TextBox(width - w / 2.0f - 2.0f, height, w + 4.0f, infos);
-    // } else {
-    //     nvg::FontSize(S_FontSize - 2.0f);
-    //     const float wd = nvg::TextBounds(diffPB).x;
-    //     const float center = (w - wd) / 2.0f;
+        if (ghost.Nickname == "Personal best") {
+            @pbGhost = ghost;
+            break;
+        }
+    }
 
-    //     nvg::FontSize(S_FontSize);
-    //     nvg::TextAlign(nvg::Align::Right | nvg::Align::Middle);
+    if (pbGhost !is null)
+        bestCpTimes = pbGhost.Checkpoints;
+    else if (cpInfo.BestRaceTimes.Length == raceData.CPsToFinish)
+        bestCpTimes = cpInfo.BestRaceTimes;
 
-    //     if (S_Drop) {
-    //         nvg::FillColor(S_DropColor);
-    //         nvg::TextBox(width + center - w - 10.0f + S_DropOffset, height + S_DropOffset, w + 4.0f, infos);
-    //     } else {
-    //         nvg::BeginPath();
-    //         nvg::FillColor(S_BackgroundColor);
-    //         bck_l += width + center - w - 8.0f;
-    //         bck_w += w + wd + 17.0f;
-    //         nvg::Rect(bck_l, height - (S_FontSize - 2) / 2.0f - 3.0f, bck_w, S_FontSize + 2.0f);
-    //         nvg::Fill();
-    //     }
+    if (cpInfo.cpCount == int(raceData.CPsToFinish) && cpInfo.NbRespawnsRequested > 0 && S_Respawns)
+        text += " (" + cpInfo.NbRespawnsRequested + " respawn" + (cpInfo.NbRespawnsRequested == 1 ? "" : "s") + ")";
 
-    //     nvg::FillColor(S_FontColor);
-    //     nvg::TextBox(width + center - w - 10.0f, height, w + 4.0f, infos);
+    int diff = 0;
+    string diffText;
 
-    //     nvg::BeginPath();
-    //     nvg::FillColor(diffPB.SubStr(0, 1) == "-" ? S_NegativeColor : S_PositiveColor);
-    //     nvg::Rect(width + center + 3.0f, height - (S_FontSize - 2) / 2.0f - 2.0f, wd + 5.0f, S_FontSize);
-    //     nvg::Fill();
+    if (bestCpTimes.Length > 0) {
+        diff = cpInfo.lastCpTime - bestCpTimes[cpInfo.cpTimes.Length - 2] - SumAllButLast(cpInfo.TimeLostToRespawnByCp);
+        diffText = TimeFormat(diff);
+        text += (S_Font == Font::DroidSansMono ? " " : "  ") + diffText;
+    }
 
-    //     nvg::FontSize(S_FontSize - 2.0f);
-    //     nvg::TextAlign(nvg::Align::Left | nvg::Align::Middle);
-    //     nvg::FillColor(S_FontColor);
-    //     nvg::TextBox(width + center + 6.0f, height + 1.0f, wd + 4.0f, diffPB);
+    const vec2 size = nvg::TextBounds(text);
+    const float diffWidth = nvg::TextBounds(diffText).x;
 
-    //     w += wd + 10.0f;
-    // }
+    const float posX = Draw::GetWidth() * S_X;
+    const float posY = Draw::GetHeight() * S_Y;
 
-    if (medal > 0) {
-        const float radius = S_FontSize / 2.5f;
-        const float y = height - S_FontSize / 12.0f;
+    const float radius = S_FontSize / 2.5f;
+
+    if (S_Background == BackgroundOption::BehindEverything) {
+        nvg::FillColor(S_BackgroundColor);
+        nvg::BeginPath();
+        nvg::RoundedRect(
+            posX - size.x * 0.5f - S_BackgroundXPad - (S_Medals && medal > 0 ? S_FontSize + radius : 0.0f),
+            posY - size.y * 0.5f - S_BackgroundYPad - 2.0f,
+            size.x + S_BackgroundXPad * 2.0f + (S_Medals && medal > 0 ? (S_FontSize + radius) * 2.0f : 0.0f),
+            size.y + S_BackgroundYPad * 2.0f,
+            S_BackgroundRadius
+        );
+        nvg::Fill();
+    }
+
+    if (bestCpTimes.Length > 0 && S_Background > 0) {
+        const float diffBgOffset = S_FontSize / 8.0f;
+
+        nvg::FillColor(diff > 0 ? S_PositiveColor : diff == 0 ? S_NeutralColor : S_NegativeColor);
+        nvg::BeginPath();
+        nvg::RoundedRect(
+            posX + size.x * 0.5f - diffWidth - diffBgOffset,
+            posY - size.y * 0.5f - S_BackgroundYPad - 2.0f,
+            diffWidth + diffBgOffset + S_BackgroundXPad,
+            size.y + S_BackgroundYPad * 2.0f,
+            S_BackgroundRadius
+        );
+        nvg::Fill();
+    }
+
+    if (S_Drop) {
+        nvg::FillColor(S_DropColor);
+        nvg::Text(posX + S_DropOffset, posY + S_DropOffset, text);
+    }
+
+    nvg::FillColor(S_FontColor);
+    nvg::Text(posX, posY, text);
+
+    if (S_Medals && medal > 0) {
+        const float halfSizeX = size.x * 0.5f;
+        const float y = posY + 1.0f - S_FontSize / 10.0f;
 
         if (S_Drop) {
             nvg::FillColor(S_DropColor);
             nvg::BeginPath();
-            nvg::Circle(vec2(width - size.x / 2.0f - S_FontSize + S_DropOffset, y + S_DropOffset), radius);
+            nvg::Circle(vec2(posX - halfSizeX - S_FontSize + S_DropOffset, y + S_DropOffset), radius);
             nvg::Fill();
             nvg::BeginPath();
-            nvg::Circle(vec2(width + size.x / 2.0f + S_FontSize + S_DropOffset, y + S_DropOffset), radius);
+            nvg::Circle(vec2(posX + halfSizeX + S_FontSize + S_DropOffset, y + S_DropOffset), radius);
             nvg::Fill();
         }
 
         nvg::BeginPath();
-        nvg::FillColor(medalColors[medal]);
-        nvg::Circle(vec2(width - size.x / 2.0f - S_FontSize, y), radius);
+        nvg::FillColor(GetMedalColor(medal));
+        nvg::Circle(vec2(posX - halfSizeX - S_FontSize, y), radius);
         nvg::Fill();
         nvg::BeginPath();
-        nvg::Circle(vec2(width + size.x / 2.0f + S_FontSize, y), radius);
+        nvg::Circle(vec2(posX + halfSizeX + S_FontSize, y), radius);
         nvg::Fill();
     }
-}
-
-int TimeLostToAllButLastCp(int[] times) {
-    int total = 0;
-
-    for (uint i = 0; i < times.Length; i++) {
-        if (i == times.Length - 1)
-            break;
-
-        total += times[i];
-    }
-
-    return total;
 }
