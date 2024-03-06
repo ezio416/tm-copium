@@ -26,14 +26,14 @@ uint S_FontSize = 24;
 [Setting category="Position/Style" name="Font color" color]
 vec4 S_FontColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 
+[Setting category="Position/Style" name="Show number of respawns"]
+bool S_Respawns = true;
+
 enum BackgroundOption {
     None,
     OnlyBehindDelta,
     BehindEverything
 }
-
-[Setting category="Position/Style" name="Show number of respawns"]
-bool S_Respawns = true;
 
 [Setting category="Position/Style" name="Show background"]
 BackgroundOption S_Background = BackgroundOption::OnlyBehindDelta;
