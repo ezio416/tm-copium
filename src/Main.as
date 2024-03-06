@@ -37,6 +37,16 @@ void Render() {
         || Playground is null
         || Playground.GameTerminals.Length == 0
         || Playground.GameTerminals[0] is null
+        || Playground.UIConfigs.Length == 0
+        || Playground.UIConfigs[0] is null
+    )
+        return;
+
+    CGamePlaygroundUIConfig::EUISequence Sequence = Playground.UIConfigs[0].UISequence;
+    if (
+        Sequence != CGamePlaygroundUIConfig::EUISequence::EndRound
+        && Sequence != CGamePlaygroundUIConfig::EUISequence::Finish
+        && Sequence != CGamePlaygroundUIConfig::EUISequence::Playing
     )
         return;
 
@@ -103,7 +113,7 @@ void Render() {
     int diff = 0;
     string diffText;
 
-    if (bestCpTimes.Length > 0) {
+    if (bestCpTimes.Length > 0 && cpInfo.cpTimes.Length > 1) {
         diff = cpInfo.lastCpTime - bestCpTimes[cpInfo.cpTimes.Length - 2] - SumAllButLast(cpInfo.TimeLostToRespawnByCp);
         diffText = TimeFormat(diff);
         text += (S_Font == Font::DroidSansMono ? " " : "  ") + diffText;
@@ -114,7 +124,6 @@ void Render() {
 
     const float posX = Draw::GetWidth() * S_X;
     const float posY = Draw::GetHeight() * S_Y;
-
     const float radius = S_FontSize / 2.5f;
 
     if (S_Background == BackgroundOption::BehindEverything) {
