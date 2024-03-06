@@ -7,10 +7,11 @@ string       infos;
 bool         inGame       = false;
 uint64       lastCPTime   = 0;
 int          medal        = -1;
+string       myName;
 int          preCPIdx     = -1;
 int          respawnCount = -1;
 uint64       timeShift    = 0;
-const string title        = "\\$09F" + Icons::Flag + "\\$G Better Copium Timer";
+const string title        = "\\$FA0" + Icons::Flag + "\\$G Better Copium Timer";
 
 const vec4[] medalColors = {
   vec4(0.0f,   0.0f,   0.0f,   0.0f),  // no medal
@@ -21,6 +22,9 @@ const vec4[] medalColors = {
 };
 
 void Main() {
+    CTrackMania@ App = cast<CTrackMania@>(GetApp());
+    myName = App.LocalPlayerInfo.Name;
+
     ChangeFont();
 }
 
@@ -35,76 +39,204 @@ void RenderMenu() {
 }
 
 void Render() {
-    if (!S_Enabled || !inGame || infos.Length == 0)
+    if (
+        !S_Enabled
+        || (S_HideWithGame && !UI::IsGameUIVisible())
+        || (S_HideWithOP && !UI::IsOverlayShown())
+    )
         return;
 
-    nvg::FontFace(font);
-    nvg::FontSize(S_FontSize);
+    CTrackMania@ App = cast<CTrackMania@>(GetApp());
+    CSmArenaClient@ Playground = cast<CSmArenaClient@>(App.CurrentPlayground);
 
-    float bck_l = 0.0f;
-    float bck_w = 0.0f;
-    float w = infos.Length < 12 ? infos.Length * S_FontSize * 0.5f : nvg::TextBounds(infos).x;
+    if (
+        App.RootMap is null
+        || Playground is null
+        || Playground.GameTerminals.Length == 0
+        || Playground.GameTerminals[0] is null
+    )
+        return;
+
+    // CSmPlayer@ Player = cast<CSmPlayer@>(Playground.GameTerminals[0].GUIPlayer);
+    // if (Player is null)
+    //     return;
+
+    // CSmScriptPlayer@ ScriptPlayer = cast<CSmScriptPlayer@>(Player.ScriptAPI);
+    // if (ScriptPlayer is null)
+    //     return;
+
+    const MLFeed::HookRaceStatsEventsBase_V4@ raceData = MLFeed::GetRaceData_V4();
+    if (raceData is null)
+        return;
+
+    const MLFeed::PlayerCpInfo_V2@ cpInfo = raceData.GetPlayer_V2(myName);
+    if (
+        cpInfo is null
+        || cpInfo.NbRespawnsRequested == 0
+        || !cpInfo.IsLocalPlayer
+    )
+        return;
+
+    int theoreticalTime = cpInfo.TheoreticalRaceTime;
+
+    if (cpInfo.cpCount == int(raceData.CPsToFinish))
+        theoreticalTime = cpInfo.LastTheoreticalCpTime;
+    else if (theoreticalTime < 0)
+        theoreticalTime = 0;
+
+    string text = Time::Format(theoreticalTime);
+
+    uint[] bestCpTimes;
+
+    const MLFeed::GhostInfo_V2@ pbGhost = null;
+
+    const MLFeed::SharedGhostDataHook_V2@ ghostData = MLFeed::GetGhostData();
+    UI::Text("ghosts: " + ghostData.Ghosts_V2.Length);
+    for (uint i = 0; i < ghostData.Ghosts_V2.Length; i++) {
+        const MLFeed::GhostInfo_V2@ ghost = ghostData.Ghosts_V2[i];
+        UI::Text("    " + ghost.Nickname);
+        if (ghost.Nickname == "Personal best") {
+            @pbGhost = ghost;
+            break;
+        }
+    }
+
+    if (pbGhost !is null) {
+        bestCpTimes = pbGhost.Checkpoints;
+        for (uint i = 0; i < pbGhost.Checkpoints.Length; i++) {
+            UI::Text("        " + Time::Format(pbGhost.Checkpoints[i]));
+        }
+    } else {
+        UI::Text("null pb ghost");
+
+        if (cpInfo.BestRaceTimes.Length == raceData.CPsToFinish) {
+            bestCpTimes = cpInfo.BestRaceTimes;
+        }
+    }
+
+    for (uint i = 0; i < bestCpTimes.Length; i++) {
+        UI::Text("- " + bestCpTimes[i]);
+    }
+
+    if (cpInfo.cpCount == int(raceData.CPsToFinish) && cpInfo.NbRespawnsRequested > 0)
+        text += " (" + cpInfo.NbRespawnsRequested + " respawn" + (cpInfo.NbRespawnsRequested == 1 ? "" : "s") + ")";
+
+    int index = cpInfo.cpTimes.Length - 2;
+    UI::Text("index: " + index);
+    UI::Text("cpTimes.Length: " + cpInfo.cpTimes.Length);
+    UI::Text("bestCpTimes.Length: " + bestCpTimes.Length);
+    try {
+        uint lastBestTime = bestCpTimes[index];
+        UI::Text("lastBestTime: " + lastBestTime);
+        UI::Text("lastCpTime: " + cpInfo.lastCpTime);
+        UI::Text("delta: " + (cpInfo.lastCpTime - lastBestTime));
+        string diff = TimeFormat(cpInfo.lastCpTime - lastBestTime - TimeLostToAllButLastCp(cpInfo.TimeLostToRespawnByCp));
+        UI::Text("format diff: " + diff);
+        text += " (" + diff + ")";
+    } catch {
+        UI::Text(getExceptionInfo());
+    }
+
+    nvg::FontSize(S_FontSize);
+    nvg::FontFace(font);
+    nvg::TextAlign(nvg::Align::Center | nvg::Align::Middle);
+
+    const vec2 size = nvg::TextBounds(text);
+
+    const float posX = Draw::GetWidth() * S_X;
+    const float posY = Draw::GetHeight() * S_Y;
+
+    if (S_Drop) {
+        nvg::FillColor(S_DropColor);
+        nvg::Text(posX + S_DropOffset, posY + S_DropOffset, text);
+    }
+
+    nvg::FillColor(S_FontColor);
+    nvg::Text(posX, posY, text);
+
+    medal = 0;
+
+    if (cpInfo.cpCount == int(raceData.CPsToFinish)) {
+        if (theoreticalTime <= int(App.RootMap.TMObjective_AuthorTime))
+            medal = 4;
+        else if (theoreticalTime <= int(App.RootMap.TMObjective_GoldTime))
+            medal = 3;
+        else if (theoreticalTime <= int(App.RootMap.TMObjective_SilverTime))
+            medal = 2;
+        else if (theoreticalTime <= int(App.RootMap.TMObjective_BronzeTime))
+            medal = 1;
+    }
+
+    // if (!S_Enabled || !inGame || infos.Length == 0)
+    //     return;
+
+    // nvg::FontFace(font);
+    // nvg::FontSize(S_FontSize);
+
+    // float bck_l = 0.0f;
+    // float bck_w = 0.0f;
+    // float w = infos.Length < 12 ? infos.Length * S_FontSize * 0.5f : nvg::TextBounds(infos).x;
 
     const float width = Draw::GetWidth() * S_X;
     const float height = Draw::GetHeight() * S_Y + 1.0f;
 
-    if (medal > 0) {
-        bck_w = S_FontSize * 3.0f - 4.0f;
-        bck_l = -0.5f * bck_w;
-    }
+    // if (medal > 0) {
+    //     bck_w = S_FontSize * 3.0f - 4.0f;
+    //     bck_l = -0.5f * bck_w;
+    // }
 
-    if (diffPB == "" || !S_CpDelta) {
-        nvg::TextAlign(nvg::Align::Center | nvg::Align::Middle);
+    // if (diffPB == "" || !S_CpDelta) {
+    //     nvg::TextAlign(nvg::Align::Center | nvg::Align::Middle);
 
-        if (S_Drop) {
-            nvg::FillColor(S_DropColor);
-            nvg::TextBox(width - w / 2.0f - 2.0f + S_DropOffset, height + S_DropOffset, w + 4.0f, infos);
-        } else {
-            nvg::BeginPath();
-            nvg::FillColor(S_BackgroundColor);
-            bck_l += width - w / 2.0f - 3.0f;
-            bck_w += w + 6.0f;
-            nvg::Rect(bck_l, height - (S_FontSize - 2) / 2.0f - 3.0f, bck_w, S_FontSize + 2.0f);
-            nvg::Fill();
-        }
+    //     if (S_Drop) {
+    //         nvg::FillColor(S_DropColor);
+    //         nvg::TextBox(width - w / 2.0f - 2.0f + S_DropOffset, height + S_DropOffset, w + 4.0f, infos);
+    //     } else {
+    //         nvg::BeginPath();
+    //         nvg::FillColor(S_BackgroundColor);
+    //         bck_l += width - w / 2.0f - 3.0f;
+    //         bck_w += w + 6.0f;
+    //         nvg::Rect(bck_l, height - (S_FontSize - 2) / 2.0f - 3.0f, bck_w, S_FontSize + 2.0f);
+    //         nvg::Fill();
+    //     }
 
-        nvg::FillColor(S_FontColor);
-        nvg::TextBox(width - w / 2.0f - 2.0f, height, w + 4.0f, infos);
-    } else {
-        nvg::FontSize(S_FontSize - 2.0f);
-        const float wd = nvg::TextBounds(diffPB).x;
-        const float center = (w - wd) / 2.0f;
+    //     nvg::FillColor(S_FontColor);
+    //     nvg::TextBox(width - w / 2.0f - 2.0f, height, w + 4.0f, infos);
+    // } else {
+    //     nvg::FontSize(S_FontSize - 2.0f);
+    //     const float wd = nvg::TextBounds(diffPB).x;
+    //     const float center = (w - wd) / 2.0f;
 
-        nvg::FontSize(S_FontSize);
-        nvg::TextAlign(nvg::Align::Right | nvg::Align::Middle);
+    //     nvg::FontSize(S_FontSize);
+    //     nvg::TextAlign(nvg::Align::Right | nvg::Align::Middle);
 
-        if (S_Drop) {
-            nvg::FillColor(S_DropColor);
-            nvg::TextBox(width + center - w - 10.0f + S_DropOffset, height + S_DropOffset, w + 4.0f, infos);
-        } else {
-            nvg::BeginPath();
-            nvg::FillColor(S_BackgroundColor);
-            bck_l += width + center - w - 8.0f;
-            bck_w += w + wd + 17.0f;
-            nvg::Rect(bck_l, height - (S_FontSize - 2) / 2.0f - 3.0f, bck_w, S_FontSize + 2.0f);
-            nvg::Fill();
-        }
+    //     if (S_Drop) {
+    //         nvg::FillColor(S_DropColor);
+    //         nvg::TextBox(width + center - w - 10.0f + S_DropOffset, height + S_DropOffset, w + 4.0f, infos);
+    //     } else {
+    //         nvg::BeginPath();
+    //         nvg::FillColor(S_BackgroundColor);
+    //         bck_l += width + center - w - 8.0f;
+    //         bck_w += w + wd + 17.0f;
+    //         nvg::Rect(bck_l, height - (S_FontSize - 2) / 2.0f - 3.0f, bck_w, S_FontSize + 2.0f);
+    //         nvg::Fill();
+    //     }
 
-        nvg::FillColor(S_FontColor);
-        nvg::TextBox(width + center - w - 10.0f, height, w + 4.0f, infos);
+    //     nvg::FillColor(S_FontColor);
+    //     nvg::TextBox(width + center - w - 10.0f, height, w + 4.0f, infos);
 
-        nvg::BeginPath();
-        nvg::FillColor(diffPB.SubStr(0, 1) == "-" ? S_NegativeColor : S_PositiveColor);
-        nvg::Rect(width + center + 3.0f, height - (S_FontSize - 2) / 2.0f - 2.0f, wd + 5.0f, S_FontSize);
-        nvg::Fill();
+    //     nvg::BeginPath();
+    //     nvg::FillColor(diffPB.SubStr(0, 1) == "-" ? S_NegativeColor : S_PositiveColor);
+    //     nvg::Rect(width + center + 3.0f, height - (S_FontSize - 2) / 2.0f - 2.0f, wd + 5.0f, S_FontSize);
+    //     nvg::Fill();
 
-        nvg::FontSize(S_FontSize - 2.0f);
-        nvg::TextAlign(nvg::Align::Left | nvg::Align::Middle);
-        nvg::FillColor(S_FontColor);
-        nvg::TextBox(width + center + 6.0f, height + 1.0f, wd + 4.0f, diffPB);
+    //     nvg::FontSize(S_FontSize - 2.0f);
+    //     nvg::TextAlign(nvg::Align::Left | nvg::Align::Middle);
+    //     nvg::FillColor(S_FontColor);
+    //     nvg::TextBox(width + center + 6.0f, height + 1.0f, wd + 4.0f, diffPB);
 
-        w += wd + 10.0f;
-    }
+    //     w += wd + 10.0f;
+    // }
 
     if (medal > 0) {
         const float circleRadius = S_FontSize / 2.5f;
@@ -113,167 +245,32 @@ void Render() {
         if (S_Drop) {
             nvg::FillColor(S_DropColor);
             nvg::BeginPath();
-            nvg::Circle(vec2(width - w / 2.0f - S_FontSize + S_DropOffset, y + S_DropOffset), circleRadius);
+            nvg::Circle(vec2(width - size.x / 2.0f - S_FontSize + S_DropOffset, y + S_DropOffset), circleRadius);
             nvg::Fill();
             nvg::BeginPath();
-            nvg::Circle(vec2(width + w / 2.0f + S_FontSize + S_DropOffset, y + S_DropOffset), circleRadius);
+            nvg::Circle(vec2(width + size.x / 2.0f + S_FontSize + S_DropOffset, y + S_DropOffset), circleRadius);
             nvg::Fill();
         }
 
         nvg::BeginPath();
         nvg::FillColor(medalColors[medal]);
-        nvg::Circle(vec2(width - w / 2.0f - S_FontSize, y), circleRadius);
+        nvg::Circle(vec2(width - size.x / 2.0f - S_FontSize, y), circleRadius);
         nvg::Fill();
         nvg::BeginPath();
-        nvg::Circle(vec2(width + w / 2.0f + S_FontSize, y), circleRadius);
+        nvg::Circle(vec2(width + size.x / 2.0f + S_FontSize, y), circleRadius);
         nvg::Fill();
     }
 }
 
-void Update(float) {
-    CTrackMania@ App = cast<CTrackMania@>(GetApp());
-    CTrackManiaNetwork@ Network = cast<CTrackManiaNetwork@>(App.Network);
-    CSmArenaClient@ Playground = cast<CSmArenaClient@>(App.CurrentPlayground);
+int TimeLostToAllButLastCp(int[] times) {
+    int total = 0;
 
-    if (
-        Playground is null
-        || Playground.Arena is null
-        || Playground.Map is null
-        || Playground.GameTerminals.Length == 0
-        || Playground.GameTerminals[0] is null
-        || Playground.UIConfigs.Length == 0
-        || Playground.UIConfigs[0] is null
-        || (Playground.UIConfigs[0].UISequence != CGamePlaygroundUIConfig::EUISequence::Playing
-            && Playground.UIConfigs[0].UISequence != CGamePlaygroundUIConfig::EUISequence::Finish
-            && Playground.UIConfigs[0].UISequence != CGamePlaygroundUIConfig::EUISequence::EndRound)
-        || Network.PlaygroundClientScriptAPI is null
-    ) {
-        inGame = false;
-        preCPIdx = -1;
-        firstCP = true;
-        return;
+    for (uint i = 0; i < times.Length; i++) {
+        if (i == times.Length - 1)
+            break;
+
+        total += times[i];
     }
 
-    CSmPlayer@ Player = cast<CSmPlayer@>(Playground.GameTerminals[0].GUIPlayer);
-    CSmScriptPlayer@ ScriptPlayer = Player is null ? null : cast<CSmScriptPlayer@>(Player.ScriptAPI);
-    int64 raceTime = 0;
-
-    if (Playground.UIConfigs[0].UISequence != CGamePlaygroundUIConfig::EUISequence::EndRound) {
-        if (ScriptPlayer is null) {
-            inGame = false;
-            preCPIdx = -1;
-            firstCP = true;
-            return;
-        }
-
-        raceTime = Network.PlaygroundClientScriptAPI.GameTime - ScriptPlayer.StartTime;
-
-        if (Player.CurrentLaunchedRespawnLandmarkIndex == uint(-1) || raceTime <= 0) {
-            inGame = false;
-            preCPIdx = -1;
-            firstCP = true;
-            return;
-        }
-    }
-
-    inGame = !S_HideWithGame || UI::IsGameUIVisible();
-
-    if (Playground.GameTerminals[0].UISequence_Current == CGamePlaygroundUIConfig::EUISequence::Playing) {
-        if (preCPIdx == -1) {
-            lastCPTime = timeShift = respawnCount = 0;
-            infos = "";
-            diffPB = "";
-            medal = -1;
-            preCPIdx = Player.CurrentLaunchedRespawnLandmarkIndex;
-            firstCP = true;
-        } else {
-            if (preCPIdx != int(Player.CurrentLaunchedRespawnLandmarkIndex)) {
-                preCPIdx = Player.CurrentLaunchedRespawnLandmarkIndex;
-                firstCP = false;
-                lastCPTime = raceTime - timeShift;
-
-                if (respawnCount > 0 && S_CpDelta) {
-                    int64 diff = GetDiffPB();
-                    diffPB = diff == 0 ? "" : FormatDiff(diff - timeShift);
-                }
-            }
-
-            if (respawnCount < int(ScriptPlayer.Score.NbRespawnsRequested)) {
-                respawnCount = ScriptPlayer.Score.NbRespawnsRequested;
-                timeShift = raceTime - lastCPTime;
-
-                if (!firstCP)
-                    timeShift += 1000;
-            }
-        }
-
-        if (respawnCount > 0 && uint64(raceTime) >= timeShift)
-            infos = Time::Format(raceTime - timeShift);
-
-    } else if (preCPIdx != -1) {
-        preCPIdx = -1;
-        firstCP = true;
-
-        if (respawnCount > 0 && uint64(raceTime) >= timeShift) {
-            infos = Time::Format(raceTime - timeShift) + " (" + respawnCount + " respawn" + (respawnCount > 1 ? "s" : "") + ")";
-
-            if (S_CpDelta) {
-                int64 diff = GetDiffPB();
-                diffPB = diff == 0 ? "" : FormatDiff(diff - timeShift);
-            }
-
-            CGameCtnChallenge@ Map = App.RootMap;
-            medal = 0;
-
-            if (Map.TMObjective_AuthorTime >= uint(raceTime - timeShift))
-                medal = 4;
-            else if (Map.TMObjective_GoldTime >= uint(raceTime - timeShift))
-                medal = 3;
-            else if (Map.TMObjective_SilverTime >= uint(raceTime - timeShift))
-                medal = 2;
-            else if (Map.TMObjective_BronzeTime >= uint(raceTime - timeShift))
-                medal = 1;
-        }
-    }
-}
-
-int64 GetDiffPB() {
-    CTrackMania@ App = cast<CTrackMania@>(GetApp());
-    CTrackManiaNetwork@ Network = cast<CTrackManiaNetwork@>(App.Network);
-    CGameManiaAppPlayground@ CMAP = Network.ClientManiaAppPlayground;
-
-    if (CMAP is null)
-        return 0;
-
-    for (uint i = 0; i < CMAP.UILayers.Length; i++) {
-        CGameUILayer@ Layer = CMAP.UILayers[i];
-        if (Layer is null)
-            continue;
-
-        string Page = string(Layer.ManialinkPage);
-
-        int start = Page.IndexOf("<");
-        int end = Page.IndexOf(">");
-
-        if (start != -1 && end != -1 && Page.SubStr(start, end).Contains("UIModule_Race_Checkpoint")) {
-            CGameManialinkLabel@ Label = cast<CGameManialinkLabel@>(Layer.LocalPage.GetFirstChild("label-race-diff"));
-            if (Label is null || !Label.Visible || !Label.Parent.Visible)
-                break;
-
-            string diff = string(Label.Value);
-            int64 res = 0;
-
-            if (diff.Length == 10) {
-                res = diff.SubStr(0, 1) == "-" ? -1 : 1;
-                int min = Text::ParseInt(diff.SubStr(1, 2));
-                int sec = Text::ParseInt(diff.SubStr(4, 2));
-                int ms = Text::ParseInt(diff.SubStr(7, 3));
-                res *= (min * 60000) + (sec * 1000) + ms;
-            }
-
-            return res;
-        }
-    }
-
-    return 0;
+    return total;
 }

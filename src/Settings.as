@@ -7,6 +7,9 @@ bool S_Enabled = true;
 [Setting category="General" name="Show/hide with game UI"]
 bool S_HideWithGame = true;
 
+[Setting category="General" name="Show/hide with Openplanet UI"]
+bool S_HideWithOP = false;
+
 [Setting category="General" name="Show adjusted CP delta" description="only if an official one exists"]
 bool S_CpDelta = true;
 
