@@ -10,9 +10,6 @@ bool S_HideWithGame = true;
 [Setting category="General" name="Show/hide with Openplanet UI"]
 bool S_HideWithOP = false;
 
-[Setting category="General" name="Show adjusted CP delta" description="only if an official one exists"]
-bool S_CpDelta = true;
-
 
 [Setting category="Position/Style" name="Position X" min=0.0f max=1.0f]
 float S_X = 0.5f;

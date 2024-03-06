@@ -57,14 +57,6 @@ void Render() {
     )
         return;
 
-    // CSmPlayer@ Player = cast<CSmPlayer@>(Playground.GameTerminals[0].GUIPlayer);
-    // if (Player is null)
-    //     return;
-
-    // CSmScriptPlayer@ ScriptPlayer = cast<CSmScriptPlayer@>(Player.ScriptAPI);
-    // if (ScriptPlayer is null)
-    //     return;
-
     const MLFeed::HookRaceStatsEventsBase_V4@ raceData = MLFeed::GetRaceData_V4();
     if (raceData is null)
         return;
@@ -91,50 +83,26 @@ void Render() {
     const MLFeed::GhostInfo_V2@ pbGhost = null;
 
     const MLFeed::SharedGhostDataHook_V2@ ghostData = MLFeed::GetGhostData();
-    UI::Text("ghosts: " + ghostData.Ghosts_V2.Length);
     for (uint i = 0; i < ghostData.Ghosts_V2.Length; i++) {
         const MLFeed::GhostInfo_V2@ ghost = ghostData.Ghosts_V2[i];
-        UI::Text("    " + ghost.Nickname);
         if (ghost.Nickname == "Personal best") {
             @pbGhost = ghost;
             break;
         }
     }
 
-    if (pbGhost !is null) {
+    if (pbGhost !is null)
         bestCpTimes = pbGhost.Checkpoints;
-        for (uint i = 0; i < pbGhost.Checkpoints.Length; i++) {
-            UI::Text("        " + Time::Format(pbGhost.Checkpoints[i]));
-        }
-    } else {
-        UI::Text("null pb ghost");
-
-        if (cpInfo.BestRaceTimes.Length == raceData.CPsToFinish) {
-            bestCpTimes = cpInfo.BestRaceTimes;
-        }
-    }
-
-    for (uint i = 0; i < bestCpTimes.Length; i++) {
-        UI::Text("- " + bestCpTimes[i]);
-    }
+    else if (cpInfo.BestRaceTimes.Length == raceData.CPsToFinish)
+        bestCpTimes = cpInfo.BestRaceTimes;
 
     if (cpInfo.cpCount == int(raceData.CPsToFinish) && cpInfo.NbRespawnsRequested > 0)
         text += " (" + cpInfo.NbRespawnsRequested + " respawn" + (cpInfo.NbRespawnsRequested == 1 ? "" : "s") + ")";
 
-    int index = cpInfo.cpTimes.Length - 2;
-    UI::Text("index: " + index);
-    UI::Text("cpTimes.Length: " + cpInfo.cpTimes.Length);
-    UI::Text("bestCpTimes.Length: " + bestCpTimes.Length);
-    try {
-        uint lastBestTime = bestCpTimes[index];
-        UI::Text("lastBestTime: " + lastBestTime);
-        UI::Text("lastCpTime: " + cpInfo.lastCpTime);
-        UI::Text("delta: " + (cpInfo.lastCpTime - lastBestTime));
+    if (bestCpTimes.Length > 0) {
+        uint lastBestTime = bestCpTimes[cpInfo.cpTimes.Length - 2];
         string diff = TimeFormat(cpInfo.lastCpTime - lastBestTime - TimeLostToAllButLastCp(cpInfo.TimeLostToRespawnByCp));
-        UI::Text("format diff: " + diff);
         text += " (" + diff + ")";
-    } catch {
-        UI::Text(getExceptionInfo());
     }
 
     nvg::FontSize(S_FontSize);
@@ -166,12 +134,6 @@ void Render() {
         else if (theoreticalTime <= int(App.RootMap.TMObjective_BronzeTime))
             medal = 1;
     }
-
-    // if (!S_Enabled || !inGame || infos.Length == 0)
-    //     return;
-
-    // nvg::FontFace(font);
-    // nvg::FontSize(S_FontSize);
 
     // float bck_l = 0.0f;
     // float bck_w = 0.0f;
@@ -239,25 +201,25 @@ void Render() {
     // }
 
     if (medal > 0) {
-        const float circleRadius = S_FontSize / 2.5f;
+        const float radius = S_FontSize / 2.5f;
         const float y = height - S_FontSize / 12.0f;
 
         if (S_Drop) {
             nvg::FillColor(S_DropColor);
             nvg::BeginPath();
-            nvg::Circle(vec2(width - size.x / 2.0f - S_FontSize + S_DropOffset, y + S_DropOffset), circleRadius);
+            nvg::Circle(vec2(width - size.x / 2.0f - S_FontSize + S_DropOffset, y + S_DropOffset), radius);
             nvg::Fill();
             nvg::BeginPath();
-            nvg::Circle(vec2(width + size.x / 2.0f + S_FontSize + S_DropOffset, y + S_DropOffset), circleRadius);
+            nvg::Circle(vec2(width + size.x / 2.0f + S_FontSize + S_DropOffset, y + S_DropOffset), radius);
             nvg::Fill();
         }
 
         nvg::BeginPath();
         nvg::FillColor(medalColors[medal]);
-        nvg::Circle(vec2(width - size.x / 2.0f - S_FontSize, y), circleRadius);
+        nvg::Circle(vec2(width - size.x / 2.0f - S_FontSize, y), radius);
         nvg::Fill();
         nvg::BeginPath();
-        nvg::Circle(vec2(width + size.x / 2.0f + S_FontSize, y), circleRadius);
+        nvg::Circle(vec2(width + size.x / 2.0f + S_FontSize, y), radius);
         nvg::Fill();
     }
 }
