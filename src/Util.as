@@ -1,5 +1,5 @@
 // c 2024-03-05
-// m 2024-03-05
+// m 2024-03-06
 
 vec4 GetMedalColor(const int medal) {
     switch (medal) {
@@ -33,8 +33,4 @@ string TimeFormat(int64 time) {
     }
 
     return str + Time::Format(time);
-}
-
-string ZPad2(int number) {
-    return (number < 10 ? "0" : "") + number;
 }
