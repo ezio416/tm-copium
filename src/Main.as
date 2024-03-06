@@ -61,10 +61,10 @@ void Render() {
             nvg::TextBox(width - w / 2.0f - 2.0f + S_DropOffset, height + S_DropOffset, w + 4.0f, infos);
         } else {
             nvg::BeginPath();
+            nvg::FillColor(S_BackgroundColor);
             bck_l += width - w / 2.0f - 3.0f;
             bck_w += w + 6.0f;
             nvg::Rect(bck_l, height - (S_FontSize - 2) / 2.0f - 3.0f, bck_w, S_FontSize + 2.0f);
-            nvg::FillColor(S_BackgroundColor);
             nvg::Fill();
         }
 
@@ -83,10 +83,10 @@ void Render() {
             nvg::TextBox(width + center - w - 10.0f + S_DropOffset, height + S_DropOffset, w + 4.0f, infos);
         } else {
             nvg::BeginPath();
+            nvg::FillColor(S_BackgroundColor);
             bck_l += width + center - w - 8.0f;
             bck_w += w + wd + 17.0f;
             nvg::Rect(bck_l, height - (S_FontSize - 2) / 2.0f - 3.0f, bck_w, S_FontSize + 2.0f);
-            nvg::FillColor(S_BackgroundColor);
             nvg::Fill();
         }
 
@@ -94,8 +94,8 @@ void Render() {
         nvg::TextBox(width + center - w - 10.0f, height, w + 4.0f, infos);
 
         nvg::BeginPath();
-        nvg::Rect(width + center + 3.0f, height - (S_FontSize - 2) / 2.0f - 2.0f, wd + 5.0f, S_FontSize);
         nvg::FillColor(diffPB.SubStr(0, 1) == "-" ? S_NegativeColor : S_PositiveColor);
+        nvg::Rect(width + center + 3.0f, height - (S_FontSize - 2) / 2.0f - 2.0f, wd + 5.0f, S_FontSize);
         nvg::Fill();
 
         nvg::FontSize(S_FontSize - 2.0f);
@@ -107,26 +107,13 @@ void Render() {
     }
 
     if (medal > 0) {
-        // if (S_Background) {
-        //     nvg::FillColor(S_BackgroundColor);
-        //     nvg::BeginPath();
-        //     nvg::RoundedRect(
-        //         width - size.x * 0.5f - S_BackgroundXPad,
-        //         height - size.y * 0.5f - S_BackgroundYPad - 2.0f,
-        //         size.x + S_BackgroundXPad * 2.0f,
-        //         size.y + S_BackgroundYPad * 2.0f,
-        //         S_BackgroundRadius
-        //     );
-        //     nvg::Fill();
-        // }
-
         const float circleRadius = S_FontSize / 2.5f;
         const float y = height - S_FontSize / 12.0f;
 
         if (S_Drop) {
+            nvg::FillColor(S_DropColor);
             nvg::BeginPath();
             nvg::Circle(vec2(width - w / 2.0f - S_FontSize + S_DropOffset, y + S_DropOffset), circleRadius);
-            nvg::FillColor(S_DropColor);
             nvg::Fill();
             nvg::BeginPath();
             nvg::Circle(vec2(width + w / 2.0f + S_FontSize + S_DropOffset, y + S_DropOffset), circleRadius);
@@ -134,8 +121,8 @@ void Render() {
         }
 
         nvg::BeginPath();
-        nvg::Circle(vec2(width - w / 2.0f - S_FontSize, y), circleRadius);
         nvg::FillColor(medalColors[medal]);
+        nvg::Circle(vec2(width - w / 2.0f - S_FontSize, y), circleRadius);
         nvg::Fill();
         nvg::BeginPath();
         nvg::Circle(vec2(width + w / 2.0f + S_FontSize, y), circleRadius);
@@ -147,7 +134,6 @@ void Update(float) {
     CTrackMania@ App = cast<CTrackMania@>(GetApp());
     CTrackManiaNetwork@ Network = cast<CTrackManiaNetwork@>(App.Network);
     CSmArenaClient@ Playground = cast<CSmArenaClient@>(App.CurrentPlayground);
-    CGamePlaygroundUIConfig::EUISequence Sequence = Playground.UIConfigs[0].UISequence;
 
     if (
         Playground is null
@@ -155,9 +141,11 @@ void Update(float) {
         || Playground.Map is null
         || Playground.GameTerminals.Length == 0
         || Playground.GameTerminals[0] is null
-        || (Sequence != CGamePlaygroundUIConfig::EUISequence::Playing
-            && Sequence != CGamePlaygroundUIConfig::EUISequence::Finish
-            && Sequence != CGamePlaygroundUIConfig::EUISequence::EndRound)
+        || Playground.UIConfigs.Length == 0
+        || Playground.UIConfigs[0] is null
+        || (Playground.UIConfigs[0].UISequence != CGamePlaygroundUIConfig::EUISequence::Playing
+            && Playground.UIConfigs[0].UISequence != CGamePlaygroundUIConfig::EUISequence::Finish
+            && Playground.UIConfigs[0].UISequence != CGamePlaygroundUIConfig::EUISequence::EndRound)
         || Network.PlaygroundClientScriptAPI is null
     ) {
         inGame = false;
@@ -170,7 +158,7 @@ void Update(float) {
     CSmScriptPlayer@ ScriptPlayer = Player is null ? null : cast<CSmScriptPlayer@>(Player.ScriptAPI);
     int64 raceTime = 0;
 
-    if (Sequence != CGamePlaygroundUIConfig::EUISequence::EndRound) {
+    if (Playground.UIConfigs[0].UISequence != CGamePlaygroundUIConfig::EUISequence::EndRound) {
         if (ScriptPlayer is null) {
             inGame = false;
             preCPIdx = -1;
