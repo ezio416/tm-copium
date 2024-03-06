@@ -3,6 +3,7 @@ name = "Better Copium Timer"
 author = "Ezio"
 category = "Race"
 version = "0.1.0"
+siteid = 500
 
 [script]
 dependencies = [ "MLHook", "MLFeedRaceData" ]
