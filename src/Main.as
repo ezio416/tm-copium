@@ -124,7 +124,7 @@ void Render() {
 
     const float posX = Draw::GetWidth() * S_X;
     const float posY = Draw::GetHeight() * S_Y;
-    const float radius = S_FontSize / 2.5f;
+    const float radius = S_FontSize * 0.4f;
 
     if (S_Background == BackgroundOption::BehindEverything) {
         nvg::FillColor(S_BackgroundColor);
@@ -140,7 +140,7 @@ void Render() {
     }
 
     if (bestCpTimes.Length > 0 && S_Background > 0) {
-        const float diffBgOffset = S_FontSize / 8.0f;
+        const float diffBgOffset = S_FontSize * 0.125f;
 
         nvg::FillColor(diff > 0 ? S_PositiveColor : diff == 0 ? S_NeutralColor : S_NegativeColor);
         nvg::BeginPath();
@@ -164,7 +164,7 @@ void Render() {
 
     if (S_Medals && medal > 0) {
         const float halfSizeX = size.x * 0.5f;
-        const float y = posY + 1.0f - S_FontSize / 10.0f;
+        const float y = posY + 1.0f - S_FontSize * 0.1f;
 
         if (S_Drop) {
             nvg::FillColor(S_DropColor);
