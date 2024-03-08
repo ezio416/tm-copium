@@ -24,7 +24,7 @@ vec4 GetMedalColor(const int medal) {
 }
 
 // courtesy of "Buffer Time" plugin - https://github.com/XertroV/tm-cotd-buffer-time
-const string SeenGhostSaveMap(const MLFeed::GhostInfo@ ghost) {
+const string SeenGhostSaveMap(const MLFeed::GhostInfo_V2@ ghost) {
     const string key = ghost.Nickname + (ghost.Checkpoints.Length << 12 ^ ghost.Result_Time);
 
     if (!ghostFirstSeenMap.Exists(key))
