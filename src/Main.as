@@ -110,8 +110,8 @@ void Render() {
             seenGhosts[key] = true;
 
             if (
-                (ghost.Nickname == "Personal best" || ghost.Nickname == myName)
-                && (pbGhost is null || ghost.Result_Time < pbGhost.Result_Time)
+                (pbGhost is null || ghost.Result_Time < pbGhost.Result_Time)
+                && (ghost.Nickname == "Personal best" || ghost.Nickname == myName)
             )
                 @pbGhost = ghost;
         }
