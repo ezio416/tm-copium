@@ -1,12 +1,22 @@
 // c 2024-03-05
-// m 2024-03-06
+// m 2024-03-07
 
-string       myName;
-const string title = "\\$FA0" + Icons::Flag + "\\$G Better Copium Timer";
+uint[]                      bestCpTimes;
+dictionary@                 ghostFirstSeenMap  = dictionary();
+int                         highestGhostIdSeen = -1;
+uint                        lastNbGhosts       = 0;
+string                      loginLocal;
+string                      myName;
+const MLFeed::GhostInfo_V2@ pbGhost            = null;
+dictionary@                 seenGhosts         = dictionary();
+CpTimeSource                source             = CpTimeSource::None;
+const string                title              = "\\$FA0" + Icons::Flag + "\\$G Better Copium Timer";
 
 void Main() {
     CTrackMania@ App = cast<CTrackMania@>(GetApp());
     myName = App.LocalPlayerInfo.Name;
+
+    startnew(CacheLocalLogin);
 
     ChangeFont();
 }
@@ -22,6 +32,8 @@ void RenderMenu() {
 }
 
 void Render() {
+    source = CpTimeSource::None;
+
     if (
         !S_Enabled
         || (S_HideWithGame && !UI::IsGameUIVisible())
@@ -39,10 +51,25 @@ void Render() {
         || Playground.GameTerminals[0] is null
         || Playground.UIConfigs.Length == 0
         || Playground.UIConfigs[0] is null
-    )
+    ) {
+        bestCpTimes.RemoveRange(0, bestCpTimes.Length);
+        highestGhostIdSeen = -1;
+        lastNbGhosts = 0;
+        @pbGhost = null;
+        seenGhosts.DeleteAll();
+        return;
+    }
+
+    RenderDebug();
+
+    if (Playground.GameTerminals[0].GUIPlayer is null)
         return;
 
-    CGamePlaygroundUIConfig::EUISequence Sequence = Playground.UIConfigs[0].UISequence;
+    CSmPlayer@ ViewingPlayer = VehicleState::GetViewingPlayer();
+    if (ViewingPlayer is null || ViewingPlayer.ScriptAPI.Login != loginLocal)
+        return;
+
+    const CGamePlaygroundUIConfig::EUISequence Sequence = Playground.UIConfigs[0].UISequence;
     if (
         Sequence != CGamePlaygroundUIConfig::EUISequence::EndRound
         && Sequence != CGamePlaygroundUIConfig::EUISequence::Finish
@@ -54,60 +81,60 @@ void Render() {
     if (raceData is null)
         return;
 
-    const MLFeed::PlayerCpInfo_V2@ cpInfo = raceData.GetPlayer_V2(myName);
-    if (
-        cpInfo is null
-        || cpInfo.NbRespawnsRequested == 0
-        || !cpInfo.IsLocalPlayer
-    )
+    const MLFeed::PlayerCpInfo_V4@ cpInfo = raceData.GetPlayer_V4(myName);
+    if (cpInfo is null || !cpInfo.IsLocalPlayer)
         return;
 
-    int theoreticalTime = cpInfo.TheoreticalRaceTime;
+    if (!S_Debug && cpInfo.NbRespawnsRequested == 0)
+        return;
 
-    if (cpInfo.cpCount == int(raceData.CPsToFinish))
-        theoreticalTime = cpInfo.LastTheoreticalCpTime;
-    else if (theoreticalTime < 0)
-        theoreticalTime = 0;
-
-    int medal = 0;
-
-    if (cpInfo.cpCount == int(raceData.CPsToFinish)) {
-        if (theoreticalTime <= int(App.RootMap.TMObjective_AuthorTime))
-            medal = 4;
-        else if (theoreticalTime <= int(App.RootMap.TMObjective_GoldTime))
-            medal = 3;
-        else if (theoreticalTime <= int(App.RootMap.TMObjective_SilverTime))
-            medal = 2;
-        else if (theoreticalTime <= int(App.RootMap.TMObjective_BronzeTime))
-            medal = 1;
-    }
-
-    nvg::FontSize(S_FontSize);
-    nvg::FontFace(font);
-    nvg::TextAlign(nvg::Align::Center | nvg::Align::Middle);
-
-    string text = Time::Format(theoreticalTime);
-
-    uint[] bestCpTimes;
-
-    const MLFeed::GhostInfo_V2@ pbGhost = null;
+    const bool finished = cpInfo.cpCount == int(raceData.CPsToFinish);
+    const uint theoreticalTime = finished ? cpInfo.LastTheoreticalCpTime : Math::Max(0, cpInfo.TheoreticalRaceTime);
 
     const MLFeed::SharedGhostDataHook_V2@ ghostData = MLFeed::GetGhostData();
-    for (uint i = 0; i < ghostData.Ghosts_V2.Length; i++) {
-        const MLFeed::GhostInfo_V2@ ghost = ghostData.Ghosts_V2[i];
 
-        if (ghost.Nickname == "Personal best") {
-            @pbGhost = ghost;
-            break;
+    if (lastNbGhosts != ghostData.NbGhosts) {
+        lastNbGhosts = ghostData.NbGhosts;
+        string key;
+
+        for (uint i = 0; i < ghostData.LoadedGhosts.Length; i++) {
+            MLFeed::GhostInfo_V2@ ghost = ghostData.LoadedGhosts[i];
+
+            if (int(ghost.IdUint) <= highestGhostIdSeen)
+                continue;
+            highestGhostIdSeen = ghost.IdUint;
+
+            key = SeenGhostSaveMap(ghost);
+            if (seenGhosts.Exists(key))
+                continue;
+            seenGhosts[key] = true;
+
+            if (
+                (ghost.Nickname == "Personal best" || ghost.Nickname == myName)
+                && (pbGhost is null || ghost.Result_Time < pbGhost.Result_Time)
+            )
+                @pbGhost = ghost;
         }
     }
 
-    if (pbGhost !is null)
+    if (pbGhost !is null) {
         bestCpTimes = pbGhost.Checkpoints;
-    else if (cpInfo.BestRaceTimes.Length == raceData.CPsToFinish)
-        bestCpTimes = cpInfo.BestRaceTimes;
+        source = CpTimeSource::PbGhost;
+    }
 
-    if (cpInfo.cpCount == int(raceData.CPsToFinish) && cpInfo.NbRespawnsRequested > 0 && S_Respawns)
+    if (cpInfo.BestRaceTimes.Length == raceData.CPsToFinish) {
+        if (pbGhost is null || (pbGhost !is null && cpInfo.bestTime < pbGhost.Result_Time)) {
+            bestCpTimes = cpInfo.BestRaceTimes;
+            source = CpTimeSource::CpInfo;
+        }
+    }
+
+    if (cpInfo.NbRespawnsRequested == 0)
+        return;
+
+    string text = Time::Format(theoreticalTime);
+
+    if (finished && cpInfo.NbRespawnsRequested > 0 && S_Respawns)
         text += " (" + cpInfo.NbRespawnsRequested + " respawn" + (cpInfo.NbRespawnsRequested == 1 ? "" : "s") + ")";
 
     int diff = 0;
@@ -119,12 +146,29 @@ void Render() {
         text += (S_Font == Font::DroidSansMono ? " " : "  ") + diffText;
     }
 
+    nvg::FontSize(S_FontSize);
+    nvg::FontFace(font);
+    nvg::TextAlign(nvg::Align::Center | nvg::Align::Middle);
+
     const vec2 size = nvg::TextBounds(text);
     const float diffWidth = nvg::TextBounds(diffText).x;
 
     const float posX = Draw::GetWidth() * S_X;
     const float posY = Draw::GetHeight() * S_Y;
     const float radius = S_FontSize * 0.4f;
+
+    int medal = 0;
+
+    if (finished) {
+        if (theoreticalTime <= App.RootMap.TMObjective_AuthorTime)
+            medal = 4;
+        else if (theoreticalTime <= App.RootMap.TMObjective_GoldTime)
+            medal = 3;
+        else if (theoreticalTime <= App.RootMap.TMObjective_SilverTime)
+            medal = 2;
+        else if (theoreticalTime <= App.RootMap.TMObjective_BronzeTime)
+            medal = 1;
+    }
 
     if (S_Background == BackgroundOption::BehindEverything) {
         nvg::FillColor(S_BackgroundColor);
