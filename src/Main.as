@@ -41,20 +41,28 @@ void Main() {
             || CMAP.ScoreMgr is null
             || Playground is null
             || Playground.Arena is null
-            || Playground.Arena.MapWaypoints.Length == 0
+            || Playground.Arena.MapLandmarks.Length == 0
         ) {
             Reset();
             continue;
         }
 
         mapCpCount = 1;
-        for (uint i = 0; i < Playground.Arena.MapWaypoints.Length; i++) {
-            CGameScriptMapWaypoint@ Waypoint = Playground.Arena.MapWaypoints[i];
-            if (Waypoint is null || Waypoint.IsFinish || Waypoint.IsMultiLap)
+        dictionary@ linked = dictionary();
+
+        for (uint i = 0; i < Playground.Arena.MapLandmarks.Length; i++) {
+            CGameScriptMapLandmark@ Landmark = Playground.Arena.MapLandmarks[i];
+            if (Landmark is null || Landmark.Waypoint is null || Landmark.Waypoint.IsFinish || Landmark.Waypoint.IsMultiLap)
                 continue;
 
-            mapCpCount++;
+            if (Landmark.Tag == "LinkedCheckpoint")
+                linked.Set(tostring(Landmark.Order), true);
+            else
+                mapCpCount++;
         }
+
+        mapCpCount += linked.GetSize();
+
         if (App.RootMap.TMObjective_IsLapRace)
             mapCpCount *= App.RootMap.TMObjective_NbLaps;
 
