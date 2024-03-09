@@ -1,12 +1,19 @@
 // c 2024-03-05
-// m 2024-03-08
+// m 2024-03-09
 
 uint[]       bestCpTimes;
+int          cpCount;
+int[]        cpTimes;
+int          lastCpTime;
 string       loginLocal;
+int          mapCpCount    = -1;
 string       myName;
 const vec4   rowBgAltColor = vec4(0.0f, 0.0f, 0.0f, 0.5f);
 const string title         = "\\$FA0" + Icons::Flag + "\\$G Better Copium Timer";
 MwId         userId;
+
+void OnDestroyed() { ResetIntercept(); }
+void OnDisabled() { ResetIntercept(); }
 
 void Main() {
     CTrackMania@ App = cast<CTrackMania@>(GetApp());
@@ -23,12 +30,33 @@ void Main() {
         sleep(500);
         yield();
 
-        CGameManiaAppPlayground@ CMAP = Network.ClientManiaAppPlayground;
+        Intercept();
 
-        if (App.RootMap is null || CMAP is null || CMAP.ScoreMgr is null) {
-            bestCpTimes.RemoveRange(0, bestCpTimes.Length);
+        CGameManiaAppPlayground@ CMAP = Network.ClientManiaAppPlayground;
+        CSmArenaClient@ Playground = cast<CSmArenaClient@>(App.CurrentPlayground);
+
+        if (
+            App.RootMap is null
+            || CMAP is null
+            || CMAP.ScoreMgr is null
+            || Playground is null
+            || Playground.Arena is null
+            || Playground.Arena.MapWaypoints.Length == 0
+        ) {
+            Reset();
             continue;
         }
+
+        mapCpCount = 1;
+        for (uint i = 0; i < Playground.Arena.MapWaypoints.Length; i++) {
+            CGameScriptMapWaypoint@ Waypoint = Playground.Arena.MapWaypoints[i];
+            if (Waypoint is null || Waypoint.IsFinish || Waypoint.IsMultiLap)
+                continue;
+
+            mapCpCount++;
+        }
+        if (App.RootMap.TMObjective_IsLapRace)
+            mapCpCount *= App.RootMap.TMObjective_NbLaps;
 
         CWebServicesTaskResult_GhostScript@ task = CMAP.ScoreMgr.Map_GetRecordGhost_v2(
             userId,
@@ -99,6 +127,7 @@ void Render() {
         return;
 
     CTrackMania@ App = cast<CTrackMania@>(GetApp());
+    CTrackManiaNetwork@ Network = cast<CTrackManiaNetwork@>(App.Network);
     CSmArenaClient@ Playground = cast<CSmArenaClient@>(App.CurrentPlayground);
 
     if (
@@ -109,7 +138,7 @@ void Render() {
         || Playground.UIConfigs.Length == 0
         || Playground.UIConfigs[0] is null
     ) {
-        bestCpTimes.RemoveRange(0, bestCpTimes.Length);
+        Reset();
         return;
     }
 
@@ -138,25 +167,51 @@ void Render() {
     if (cpInfo is null || !cpInfo.IsLocalPlayer)
         return;
 
-    if (!S_Debug && cpInfo.NbRespawnsRequested == 0)
+    //##########################################################################
+
+    // const int    mapCpCount            = raceData.CPsToFinish;
+    // const int    cpCount               = cpInfo.cpCount;
+    // const int[]  cpTimes               = cpInfo.cpTimes;
+    // cpTimes                            = cpInfo.cpTimes;
+    // const int    lastCpTime            = cpInfo.lastCpTime;
+    const int    LastTheoreticalCpTime = cpInfo.LastTheoreticalCpTime;
+    // const uint   NbRespawnsRequested   = cpInfo.NbRespawnsRequested;
+    const int    TheoreticalRaceTime   = cpInfo.TheoreticalRaceTime;
+    const int[]@ TimeLostToRespawnByCp = cpInfo.TimeLostToRespawnByCp;
+
+    CSmScriptPlayer@ ScriptPlayer = cast<CSmScriptPlayer@>(ViewingPlayer.ScriptAPI);
+    if (ScriptPlayer is null || ScriptPlayer.Score is null)
+        return;
+    const uint NbRespawnsRequested = ScriptPlayer.Score.NbRespawnsRequested;
+
+    if (Network.PlaygroundClientScriptAPI.GameTime - ScriptPlayer.StartTime < 0) {
+        cpCount = 0;
+        cpTimes.RemoveRange(0, cpTimes.Length);
+        lastCpTime = 0;
+        return;
+    }
+
+    //##########################################################################
+
+    if (!S_Debug && NbRespawnsRequested == 0)
         return;
 
-    const bool finished = cpInfo.cpCount == int(raceData.CPsToFinish);
-    const uint theoreticalTime = finished ? cpInfo.LastTheoreticalCpTime : Math::Max(0, cpInfo.TheoreticalRaceTime);
+    const bool finished = cpCount == mapCpCount;
+    const uint theoreticalTime = finished ? LastTheoreticalCpTime : Math::Max(0, TheoreticalRaceTime);
 
-    if (cpInfo.NbRespawnsRequested == 0)
+    if (NbRespawnsRequested == 0)
         return;
 
     string text = Time::Format(theoreticalTime);
 
-    if (finished && cpInfo.NbRespawnsRequested > 0 && S_Respawns)
-        text += " (" + cpInfo.NbRespawnsRequested + " respawn" + (cpInfo.NbRespawnsRequested == 1 ? "" : "s") + ")";
+    if (finished && NbRespawnsRequested > 0 && S_Respawns)
+        text += " (" + NbRespawnsRequested + " respawn" + (NbRespawnsRequested == 1 ? "" : "s") + ")";
 
     int diff = 0;
     string diffText;
 
-    if (bestCpTimes.Length > 0 && cpInfo.cpTimes.Length > 1) {
-        diff = cpInfo.lastCpTime - bestCpTimes[cpInfo.cpTimes.Length - 2] - SumAllButLast(cpInfo.TimeLostToRespawnByCp);
+    if (bestCpTimes.Length > 0 && cpTimes.Length > 0) {
+        diff = lastCpTime - bestCpTimes[cpTimes.Length - 1] - SumAllButLast(TimeLostToRespawnByCp);
         diffText = TimeFormat(diff);
         text += (S_Font == Font::DroidSansMono ? " " : "  ") + diffText;
     }
@@ -243,4 +298,13 @@ void Render() {
         nvg::Circle(vec2(posX + halfSizeX + S_FontSize, y), radius);
         nvg::Fill();
     }
+}
+
+void Reset() {
+    bestCpTimes.RemoveRange(0, bestCpTimes.Length);
+    cpCount = 0;
+    cpTimes.RemoveRange(0, cpTimes.Length);
+    lastCpTime = 0;
+    mapCpCount = -1;
+    ResetIntercept();
 }
