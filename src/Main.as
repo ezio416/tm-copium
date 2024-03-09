@@ -1,24 +1,83 @@
 // c 2024-03-05
-// m 2024-03-07
+// m 2024-03-08
 
-uint[]                      bestCpTimes;
-dictionary@                 ghostFirstSeenMap  = dictionary();
-int                         highestGhostIdSeen = -1;
-uint                        lastNbGhosts       = 0;
-string                      loginLocal;
-string                      myName;
-const MLFeed::GhostInfo_V2@ pbGhost            = null;
-dictionary@                 seenGhosts         = dictionary();
-CpTimeSource                source             = CpTimeSource::None;
-const string                title              = "\\$FA0" + Icons::Flag + "\\$G Better Copium Timer";
+uint[]       bestCpTimes;
+string       loginLocal;
+string       myName;
+const vec4   rowBgAltColor = vec4(0.0f, 0.0f, 0.0f, 0.5f);
+const string title         = "\\$FA0" + Icons::Flag + "\\$G Better Copium Timer";
+MwId         userId;
 
 void Main() {
     CTrackMania@ App = cast<CTrackMania@>(GetApp());
+    CTrackManiaNetwork@ Network = cast<CTrackManiaNetwork@>(App.Network);
+
     myName = App.LocalPlayerInfo.Name;
 
     startnew(CacheLocalLogin);
+    startnew(CacheUserId);
 
     ChangeFont();
+
+    while (true) {
+        sleep(500);
+        yield();
+
+        CGameManiaAppPlayground@ CMAP = Network.ClientManiaAppPlayground;
+
+        if (App.RootMap is null || CMAP is null || CMAP.ScoreMgr is null) {
+            bestCpTimes.RemoveRange(0, bestCpTimes.Length);
+            continue;
+        }
+
+        CWebServicesTaskResult_GhostScript@ task = CMAP.ScoreMgr.Map_GetRecordGhost_v2(
+            userId,
+            App.RootMap.EdChallengeId,
+            "PersonalBest",
+            "",
+            "TimeAttack",
+            ""
+        );
+
+        bool toContinue = false;
+
+        while (task.IsProcessing) {
+            yield();
+
+            if (CMAP is null || CMAP.ScoreMgr is null || task is null) {
+                toContinue = true;
+                break;
+            }
+        }
+
+        if (toContinue)
+            continue;
+
+        if (task.HasSucceeded) {
+            CGameGhostScript@ ghost = task.Ghost;
+            if (ghost is null)
+                continue;
+
+            CTmRaceResultNod@ result = ghost.Result;
+            if (result is null) {
+                if (CMAP !is null && CMAP.DataFileMgr !is null)
+                    CMAP.DataFileMgr.Ghost_Release(ghost.Id);
+
+                continue;
+            }
+
+            bestCpTimes.RemoveRange(0, bestCpTimes.Length);
+
+            for (uint i = 0; i < result.Checkpoints.Length; i++)
+                bestCpTimes.InsertLast(result.Checkpoints[i]);
+
+            if (CMAP.DataFileMgr !is null)
+                CMAP.DataFileMgr.Ghost_Release(ghost.Id);
+        }
+
+        if (CMAP !is null && CMAP.ScoreMgr !is null && task !is null)
+            CMAP.ScoreMgr.TaskResult_Release(task.Id);
+    }
 }
 
 void OnSettingsChanged() {
@@ -32,8 +91,6 @@ void RenderMenu() {
 }
 
 void Render() {
-    source = CpTimeSource::None;
-
     if (
         !S_Enabled
         || (S_HideWithGame && !UI::IsGameUIVisible())
@@ -53,10 +110,6 @@ void Render() {
         || Playground.UIConfigs[0] is null
     ) {
         bestCpTimes.RemoveRange(0, bestCpTimes.Length);
-        highestGhostIdSeen = -1;
-        lastNbGhosts = 0;
-        @pbGhost = null;
-        seenGhosts.DeleteAll();
         return;
     }
 
@@ -90,44 +143,6 @@ void Render() {
 
     const bool finished = cpInfo.cpCount == int(raceData.CPsToFinish);
     const uint theoreticalTime = finished ? cpInfo.LastTheoreticalCpTime : Math::Max(0, cpInfo.TheoreticalRaceTime);
-
-    const MLFeed::SharedGhostDataHook_V2@ ghostData = MLFeed::GetGhostData();
-
-    if (lastNbGhosts != ghostData.NbGhosts) {
-        lastNbGhosts = ghostData.NbGhosts;
-        string key;
-
-        for (uint i = 0; i < ghostData.LoadedGhosts.Length; i++) {
-            MLFeed::GhostInfo_V2@ ghost = ghostData.LoadedGhosts[i];
-
-            if (int(ghost.IdUint) <= highestGhostIdSeen)
-                continue;
-            highestGhostIdSeen = ghost.IdUint;
-
-            key = SeenGhostSaveMap(ghost);
-            if (seenGhosts.Exists(key))
-                continue;
-            seenGhosts[key] = true;
-
-            if (
-                (pbGhost is null || ghost.Result_Time < pbGhost.Result_Time)
-                && (ghost.Nickname == "Personal best" || ghost.Nickname == myName)
-            )
-                @pbGhost = ghost;
-        }
-    }
-
-    if (pbGhost !is null) {
-        bestCpTimes = pbGhost.Checkpoints;
-        source = CpTimeSource::PbGhost;
-    }
-
-    if (cpInfo.BestRaceTimes.Length == raceData.CPsToFinish) {
-        if (pbGhost is null || (pbGhost !is null && cpInfo.bestTime < pbGhost.Result_Time)) {
-            bestCpTimes = cpInfo.BestRaceTimes;
-            source = CpTimeSource::CpInfo;
-        }
-    }
 
     if (cpInfo.NbRespawnsRequested == 0)
         return;

@@ -1,5 +1,5 @@
 // c 2024-03-05
-// m 2024-03-07
+// m 2024-03-08
 
 // courtesy of "Auto-hide Opponents" plugin - https://github.com/XertroV/tm-autohide-opponents
 void CacheLocalLogin() {
@@ -13,6 +13,23 @@ void CacheLocalLogin() {
     }
 }
 
+void CacheUserId() {
+    CTrackMania@ App = cast<CTrackMania@>(GetApp());
+
+    while (true) {
+        sleep(100);
+
+        if (
+            App.UserManagerScript !is null
+            && App.UserManagerScript.Users.Length > 0
+            && App.UserManagerScript.Users[0] !is null
+        ) {
+            userId = App.UserManagerScript.Users[0].Id;
+            break;
+        }
+    }
+}
+
 vec4 GetMedalColor(const int medal) {
     switch (medal) {
         case 4: return S_AuthorColor;
@@ -21,16 +38,6 @@ vec4 GetMedalColor(const int medal) {
         case 1: return S_BronzeColor;
         default: return vec4(0.0f, 0.0f, 0.0f, 0.0f);
     }
-}
-
-// courtesy of "Buffer Time" plugin - https://github.com/XertroV/tm-cotd-buffer-time
-const string SeenGhostSaveMap(const MLFeed::GhostInfo_V2@ ghost) {
-    const string key = ghost.Nickname + (ghost.Checkpoints.Length << 12 ^ ghost.Result_Time);
-
-    if (!ghostFirstSeenMap.Exists(key))
-        ghostFirstSeenMap[key] = GetApp().RootMap.EdChallengeId;
-
-    return key;
 }
 
 int SumAllButLast(const int[] times) {
