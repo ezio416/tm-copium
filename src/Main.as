@@ -1,5 +1,5 @@
 // c 2024-03-05
-// m 2024-03-09
+// m 2024-03-14
 
 uint[]       bestCpTimes;
 int          cpCount;
@@ -41,11 +41,13 @@ void Main() {
             || CMAP.ScoreMgr is null
             || Playground is null
             || Playground.Arena is null
-            || Playground.Arena.MapLandmarks.Length == 0
         ) {
             Reset();
             continue;
         }
+
+        if (Playground.Arena.MapLandmarks.Length == 0)
+            continue;
 
         mapCpCount = 1;
         dictionary@ linked = dictionary();
