@@ -30,8 +30,6 @@ void Main() {
         sleep(500);
         yield();
 
-        Intercept();
-
         CGameManiaAppPlayground@ CMAP = Network.ClientManiaAppPlayground;
         CSmArenaClient@ Playground = cast<CSmArenaClient@>(App.CurrentPlayground);
 
@@ -41,13 +39,13 @@ void Main() {
             || CMAP.ScoreMgr is null
             || Playground is null
             || Playground.Arena is null
+            || Playground.Arena.MapLandmarks.Length == 0
         ) {
             Reset();
             continue;
         }
 
-        if (Playground.Arena.MapLandmarks.Length == 0)
-            continue;
+        Intercept();
 
         mapCpCount = 1;
         dictionary@ linked = dictionary();
