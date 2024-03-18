@@ -1,15 +1,19 @@
 // c 2024-03-05
-// m 2024-03-14
+// m 2024-03-18
 
 uint[]       bestCpTimes;
-int          cpCount;
+int          cpCount               = 0;
 int[]        cpTimes;
-int          lastCpTime;
+int          lastCpTime            = 0;
+// int          lastRespawnRaceTime   = 0;
+// int          lastTheoreticalCpTime = 0;
 string       loginLocal;
-int          mapCpCount    = -1;
+int          mapCpCount            = -1;
 string       myName;
-const vec4   rowBgAltColor = vec4(0.0f, 0.0f, 0.0f, 0.5f);
-const string title         = "\\$FA0" + Icons::Flag + "\\$G Better Copium Timer";
+// int          respawns              = 0;
+const vec4   rowBgAltColor         = vec4(0.0f, 0.0f, 0.0f, 0.5f);
+int          timeLostToRespawns    = 0;
+const string title                 = "\\$FA0" + Icons::Flag + "\\$G Better Copium Timer";
 MwId         userId;
 
 void OnDestroyed() { ResetIntercept(); }
@@ -19,7 +23,7 @@ void Main() {
     CTrackMania@ App = cast<CTrackMania@>(GetApp());
     CTrackManiaNetwork@ Network = cast<CTrackManiaNetwork@>(App.Network);
 
-    myName = App.LocalPlayerInfo.Name;
+    myName = App.LocalPlayerInfo.Name;  // just for MLFeed
 
     startnew(CacheLocalLogin);
     startnew(CacheUserId);
@@ -182,33 +186,64 @@ void Render() {
     // const int[]  cpTimes               = cpInfo.cpTimes;
     // cpTimes                            = cpInfo.cpTimes;
     // const int    lastCpTime            = cpInfo.lastCpTime;
-    const int    LastTheoreticalCpTime = cpInfo.LastTheoreticalCpTime;
-    // const uint   NbRespawnsRequested   = cpInfo.NbRespawnsRequested;
-    const int    TheoreticalRaceTime   = cpInfo.TheoreticalRaceTime;
-    const int[]@ TimeLostToRespawnByCp = cpInfo.TimeLostToRespawnByCp;
+    const int lastTheoreticalCpTime = cpInfo.LastTheoreticalCpTime;  // { uint tl = 0; for (uint i = 0; i < timeLostToRespawnByCp.Length - 1; i++) { tl += timeLostToRespawnByCp[i]; } return lastCpTime - tl; }
+    const uint   NbRespawnsRequested   = cpInfo.NbRespawnsRequested;
+    const int    theoreticalRaceTime   = cpInfo.TheoreticalRaceTime;  // raceTime - timeLostToRespawns
+    const int[]@ timeLostToRespawnByCp = cpInfo.TimeLostToRespawnByCp;
+
+    // int tl = 0;
+    // for (uint i = 0; i < timeLostToRespawnByCp.Length - 1; i++)
+    //     tl += timeLostToRespawnByCp[i];
+    // lastTheoreticalCpTime = lastCpTime - tl;
 
     CSmScriptPlayer@ ScriptPlayer = cast<CSmScriptPlayer@>(ViewingPlayer.ScriptAPI);
     if (ScriptPlayer is null || ScriptPlayer.Score is null)
         return;
-    const uint NbRespawnsRequested = ScriptPlayer.Score.NbRespawnsRequested;
 
-    if (Network.PlaygroundClientScriptAPI.GameTime - ScriptPlayer.StartTime < 0) {
+    // bool didRespawn = false;
+    // if (respawns != ScriptPlayer.Score.NbRespawnsRequested) {
+    //     didRespawn = respawns < ScriptPlayer.Score.NbRespawnsRequested;
+    //     respawns = ScriptPlayer.Score.NbRespawnsRequested;
+    // }
+
+    const int raceTime = Network.PlaygroundClientScriptAPI.GameTime - ScriptPlayer.StartTime;
+
+    // if (didRespawn) {
+    //     const int respawnOverhead = cpCount == 0 ? 0 : 1000;
+    //     const int newTimeLost = respawnOverhead + Math::Max(0, raceTime - lastCpTime);
+
+    //     lastRespawnRaceTime = respawnOverhead + raceTime;
+    //     lastRespawnCheckpoint = cpCount;
+    //     timeLostToRespawns -= timeLostToRespawnsByCp[cpCount];
+    //     timeLostToRespawnsByCp[cpCount] = newTimeLost;
+    //     timeLostToRespawns += newTimeLost;
+    //     nbRespawnsByCp[cpCount] += 1;
+    //     respawnTimes.InsertLast(raceTime);
+    // }
+
+    if (raceTime < 0) {
         cpCount = 0;
         cpTimes.RemoveRange(0, cpTimes.Length);
         lastCpTime = 0;
+        // lastRespawnRaceTime = 0;
+        // respawns = 0;
+        timeLostToRespawns = 0;
         return;
     }
 
     //##########################################################################
 
-    if (!S_Debug && NbRespawnsRequested == 0)
+    if (
+        !S_Debug
+        // && respawns == 0
+    )
         return;
 
     const bool finished = cpCount == mapCpCount;
-    const uint theoreticalTime = finished ? LastTheoreticalCpTime : Math::Max(0, TheoreticalRaceTime);
+    const uint theoreticalTime = finished ? lastTheoreticalCpTime : Math::Max(0, theoreticalRaceTime);
 
-    if (NbRespawnsRequested == 0)
-        return;
+    // if (respawns == 0)
+    //     return;
 
     string text = Time::Format(theoreticalTime);
 
@@ -219,7 +254,7 @@ void Render() {
     string diffText;
 
     if (bestCpTimes.Length > 0 && cpTimes.Length > 0) {
-        diff = lastCpTime - bestCpTimes[cpTimes.Length - 1] - SumAllButLast(TimeLostToRespawnByCp);
+        diff = lastCpTime - bestCpTimes[cpTimes.Length - 1] - SumAllButLast(timeLostToRespawnByCp);
         diffText = TimeFormat(diff);
         text += (S_Font == Font::DroidSansMono ? " " : "  ") + diffText;
     }
