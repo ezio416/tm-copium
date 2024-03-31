@@ -1,5 +1,5 @@
 // c 2024-03-05
-// m 2024-03-07
+// m 2024-03-18
 
 [Setting category="General" name="Show timer"]
 bool S_Enabled = true;
@@ -55,12 +55,15 @@ float S_BackgroundRadius = 10.0f;
 
 [Setting category="Position/Style" name="Positive delta color" description="slower than PB" color]
 vec4 S_PositiveColor = vec4(0.8f, 0.0f, 0.0f, 0.8f);
+string negColorUi;
 
 [Setting category="Position/Style" name="Neutral delta color" description="equal to PB" color]
 vec4 S_NeutralColor = vec4(0.7f, 0.7f, 0.7f, 0.8f);
+string neuColorUi;
 
 [Setting category="Position/Style" name="Negative delta color" description="faster than PB" color]
 vec4 S_NegativeColor = vec4(0.0f, 0.0f, 0.8f, 0.8f);
+string posColorUi;
 
 [Setting category="Position/Style" name="Show drop shadow"]
 bool S_Drop = true;

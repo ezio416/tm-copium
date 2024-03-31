@@ -1,5 +1,5 @@
 // c 2024-03-05
-// m 2024-03-14
+// m 2024-03-30
 
 uint[]       bestCpTimes;
 int          cpCount;
@@ -25,6 +25,7 @@ void Main() {
     startnew(CacheUserId);
 
     ChangeFont();
+    OnSettingsChanged();
 
     while (true) {
         sleep(500);
@@ -65,6 +66,9 @@ void Main() {
 
         if (App.RootMap.TMObjective_IsLapRace)
             mapCpCount *= App.RootMap.TMObjective_NbLaps;
+
+        if (!S_Enabled)
+            continue;
 
         CWebServicesTaskResult_GhostScript@ task = CMAP.ScoreMgr.Map_GetRecordGhost_v2(
             userId,
@@ -119,6 +123,10 @@ void Main() {
 void OnSettingsChanged() {
     if (currentFont != S_Font)
         ChangeFont();
+
+    negColorUi = Text::FormatOpenplanetColor(vec3(S_NegativeColor.x, S_NegativeColor.y, S_NegativeColor.z));
+    neuColorUi = Text::FormatOpenplanetColor(vec3(S_NeutralColor.x,  S_NeutralColor.y,  S_NeutralColor.z));
+    posColorUi = Text::FormatOpenplanetColor(vec3(S_PositiveColor.x, S_PositiveColor.y, S_PositiveColor.z));
 }
 
 void RenderMenu() {
