@@ -277,6 +277,15 @@ void OnEnteredMap() {
     SetBestCpTimes();
 }
 
+void Reset() {
+    bestCpTimes = {};
+    cpCount     = 0;
+    cpTimes     = {};
+    lastCpTime  = 0;
+    mapCpCount  = -1;
+    ResetIntercept();
+}
+
 void SetBestCpTimes() {
     print("SetBestCpTimes");
 
@@ -407,13 +416,4 @@ void SetMapCpCount() {
 
     if (App.RootMap.TMObjective_IsLapRace)
         mapCpCount *= App.RootMap.TMObjective_NbLaps;
-}
-
-void Reset() {
-    bestCpTimes = {};
-    cpCount     = 0;
-    cpTimes     = {};
-    lastCpTime  = 0;
-    mapCpCount  = -1;
-    ResetIntercept();
 }
