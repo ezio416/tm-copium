@@ -20,6 +20,9 @@ void RenderDebug() {
             UI::TableSetupColumn("delta");
             UI::TableHeadersRow();
 
+            if (mapCpCount < 0)
+                mapCpCount = 0;
+
             for (uint i = 0; i < uint(mapCpCount); i++) {
                 UI::TableNextRow();
 
