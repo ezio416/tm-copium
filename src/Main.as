@@ -1,122 +1,75 @@
 // c 2024-03-05
-// m 2024-03-30
+// m 2024-04-01
 
 uint[]       bestCpTimes;
 int          cpCount;
 int[]        cpTimes;
 int          lastCpTime;
-string       loginLocal;
-int          mapCpCount    = -1;
-string       myName;
-const vec4   rowBgAltColor = vec4(0.0f, 0.0f, 0.0f, 0.5f);
-const string title         = "\\$FA0" + Icons::Flag + "\\$G Better Copium Timer";
-MwId         userId;
+bool         lastTaskSuccess = false;
+MwId         localId;
+string       localLogin;
+string       localName;
+int          mapCpCount      = 0;
+const vec4   rowBgAltColor   = vec4(0.0f, 0.0f, 0.0f, 0.5f);
+const string title           = "\\$FA0" + Icons::Flag + "\\$G Better Copium Timer";
 
 void OnDestroyed() { ResetIntercept(); }
-void OnDisabled() { ResetIntercept(); }
+void OnDisabled()  { ResetIntercept(); }
 
 void Main() {
-    CTrackMania@ App = cast<CTrackMania@>(GetApp());
-    CTrackManiaNetwork@ Network = cast<CTrackManiaNetwork@>(App.Network);
-
-    myName = App.LocalPlayerInfo.Name;
-
+    startnew(CacheLocalId);
     startnew(CacheLocalLogin);
-    startnew(CacheUserId);
+    startnew(CacheLocalName);
 
     ChangeFont();
     OnSettingsChanged();
 
+    bool inMap;
+    bool wasInMap = InMap();
+
+    if (wasInMap)
+        OnEnteredMap();
+
+    CTrackMania@ App = cast<CTrackMania@>(GetApp());
+    CTrackManiaNetwork@ Network = cast<CTrackManiaNetwork@>(App.Network);
+
     while (true) {
-        sleep(500);
         yield();
 
-        CGameManiaAppPlayground@ CMAP = Network.ClientManiaAppPlayground;
-        CSmArenaClient@ Playground = cast<CSmArenaClient@>(App.CurrentPlayground);
+        inMap = InMap();
 
-        if (
-            App.RootMap is null
-            || CMAP is null
-            || CMAP.ScoreMgr is null
-            || Playground is null
-            || Playground.Arena is null
-            || Playground.Arena.MapLandmarks.Length == 0
-        ) {
+        if (!inMap) {
+            wasInMap = false;
             Reset();
             continue;
         }
 
-        Intercept();
-
-        mapCpCount = 1;
-        dictionary@ linked = dictionary();
-
-        for (uint i = 0; i < Playground.Arena.MapLandmarks.Length; i++) {
-            CGameScriptMapLandmark@ Landmark = Playground.Arena.MapLandmarks[i];
-            if (Landmark is null || Landmark.Waypoint is null || Landmark.Waypoint.IsFinish || Landmark.Waypoint.IsMultiLap)
-                continue;
-
-            if (Landmark.Tag == "LinkedCheckpoint")
-                linked.Set(tostring(Landmark.Order), true);
-            else
-                mapCpCount++;
+        if (!wasInMap) {
+            wasInMap = true;
+            OnEnteredMap();
         }
 
-        mapCpCount += linked.GetSize();
+        CGameManiaAppPlayground@ CMAP = Network.ClientManiaAppPlayground;
 
-        if (App.RootMap.TMObjective_IsLapRace)
-            mapCpCount *= App.RootMap.TMObjective_NbLaps;
-
-        if (!S_Enabled)
+        if (
+            CMAP.UI is null
+            || CMAP.UI.UISequence != CGamePlaygroundUIConfig::EUISequence::Finish
+        )
             continue;
 
-        CWebServicesTaskResult_GhostScript@ task = CMAP.ScoreMgr.Map_GetRecordGhost_v2(
-            userId,
-            App.RootMap.EdChallengeId,
-            "PersonalBest",
-            "",
-            "TimeAttack",
-            ""
-        );
+        const uint yieldFrames = App.PlaygroundScript is null ? 50 : 20;
+        for (uint i = 0; i < yieldFrames; i++)
+            yield();  // allow game to process PB
 
-        bool toContinue = false;
+        SetBestCpTimes();
 
-        while (task.IsProcessing) {
-            yield();
-
-            if (CMAP is null || CMAP.ScoreMgr is null || task is null) {
-                toContinue = true;
-                break;
-            }
-        }
-
-        if (toContinue)
-            continue;
-
-        if (task.HasSucceeded) {
-            CGameGhostScript@ ghost = task.Ghost;
-            if (ghost is null)
-                continue;
-
-            CTmRaceResultNod@ result = ghost.Result;
-            if (result is null) {
-                if (CMAP !is null && CMAP.DataFileMgr !is null)
-                    CMAP.DataFileMgr.Ghost_Release(ghost.Id);
-
-                continue;
-            }
-
-            bestCpTimes.RemoveRange(0, bestCpTimes.Length);
-
-            for (uint i = 0; i < result.Checkpoints.Length; i++)
-                bestCpTimes.InsertLast(result.Checkpoints[i]);
-
-            if (CMAP.DataFileMgr !is null)
-                CMAP.DataFileMgr.Ghost_Release(ghost.Id);
-        }
-
-        if (CMAP !is null && CMAP.ScoreMgr !is null && task !is null)
-            CMAP.ScoreMgr.TaskResult_Release(task.Id);
+        try {
+            while (
+                CMAP.UI.UISequence == CGamePlaygroundUIConfig::EUISequence::Finish
+                || CMAP.UI.UISequence == CGamePlaygroundUIConfig::EUISequence::EndRound
+            )
+                yield();
+        } catch { }
     }
 }
 
@@ -127,11 +80,6 @@ void OnSettingsChanged() {
     negColorUi = Text::FormatOpenplanetColor(vec3(S_NegativeColor.x, S_NegativeColor.y, S_NegativeColor.z));
     neuColorUi = Text::FormatOpenplanetColor(vec3(S_NeutralColor.x,  S_NeutralColor.y,  S_NeutralColor.z));
     posColorUi = Text::FormatOpenplanetColor(vec3(S_PositiveColor.x, S_PositiveColor.y, S_PositiveColor.z));
-}
-
-void RenderMenu() {
-    if (UI::MenuItem(title, "", S_Enabled))
-        S_Enabled = !S_Enabled;
 }
 
 void Render() {
@@ -164,7 +112,7 @@ void Render() {
         return;
 
     CSmPlayer@ ViewingPlayer = VehicleState::GetViewingPlayer();
-    if (ViewingPlayer is null || ViewingPlayer.ScriptAPI.Login != loginLocal)
+    if (ViewingPlayer is null || ViewingPlayer.ScriptAPI.Login != localLogin)
         return;
 
     const CGamePlaygroundUIConfig::EUISequence Sequence = Playground.UIConfigs[0].UISequence;
@@ -179,7 +127,7 @@ void Render() {
     if (raceData is null)
         return;
 
-    const MLFeed::PlayerCpInfo_V4@ cpInfo = raceData.GetPlayer_V4(myName);
+    const MLFeed::PlayerCpInfo_V4@ cpInfo = raceData.GetPlayer_V4(localName);
     if (cpInfo is null || !cpInfo.IsLocalPlayer)
         return;
 
@@ -316,10 +264,153 @@ void Render() {
     }
 }
 
+void RenderMenu() {
+    if (UI::MenuItem(title, "", S_Enabled))
+        S_Enabled = !S_Enabled;
+}
+
+void OnEnteredMap() {
+    print("OnEnteredMap");
+
+    SetMapCpCount();
+    SetBestCpTimes();
+}
+
+void SetBestCpTimes() {
+    print("SetBestCpTimes");
+
+    CTrackMania@ App = cast<CTrackMania@>(GetApp());
+    CTrackManiaNetwork@ Network = cast<CTrackManiaNetwork@>(App.Network);
+    CGameManiaAppPlayground@ CMAP = Network.ClientManiaAppPlayground;
+
+    lastTaskSuccess = false;
+
+    if (
+        App.RootMap is null
+        || CMAP is null
+        || CMAP.ScoreMgr is null
+    )
+        return;
+
+    const uint64 start = Time::Now;
+    const uint64 maxTime = 2000;
+
+    while (localId.Value == 0) {
+        yield();
+
+        if (Time::Now - start > maxTime) {
+            warn("SetBestCpTimes: waited too long for localId to be valid (" + maxTime + " ms)");
+            return;
+        }
+    }
+
+    CWebServicesTaskResult_GhostScript@ task = CMAP.ScoreMgr.Map_GetRecordGhost_v2(
+        localId,
+        App.RootMap.EdChallengeId,
+        "PersonalBest",
+        "",
+        "TimeAttack",
+        ""
+    );
+
+    while (task.IsProcessing) {
+        yield();
+
+        if (CMAP is null || CMAP.ScoreMgr is null || task is null) {
+            warn("SetBestCpTimes: something is null, getting PB ghost failed");
+            return;
+        }
+    }
+
+    if (task.HasFailed || !task.HasSucceeded) {
+        warn("SetBestCpTimes: task failed");
+        CMAP.ScoreMgr.TaskResult_Release(task.Id);
+        return;
+    }
+
+    CGameGhostScript@ ghost = task.Ghost;
+    if (ghost is null) {
+        warn("SetBestCpTimes: task ghost is null");
+        CMAP.ScoreMgr.TaskResult_Release(task.Id);
+        return;
+    }
+
+    CTmRaceResultNod@ result = ghost.Result;
+    if (result is null) {
+        warn("SetBestCpTimes: task ghost result is null");
+        CMAP.ScoreMgr.TaskResult_Release(task.Id);
+
+        if (CMAP.DataFileMgr !is null)
+            CMAP.DataFileMgr.Ghost_Release(ghost.Id);
+
+        return;
+    }
+
+    bestCpTimes = {};
+    lastTaskSuccess = true;
+
+    if (result.Checkpoints.Length == 0) {
+        warn("task ghost result has no checkpoints");
+
+        if (CMAP.DataFileMgr !is null)
+            CMAP.DataFileMgr.Ghost_Release(ghost.Id);
+
+        CMAP.ScoreMgr.TaskResult_Release(task.Id);
+        return;
+    }
+
+    for (uint i = 0; i < result.Checkpoints.Length; i++)
+        bestCpTimes.InsertLast(result.Checkpoints[i]);
+
+    if (CMAP.DataFileMgr !is null)
+        CMAP.DataFileMgr.Ghost_Release(ghost.Id);
+
+    CMAP.ScoreMgr.TaskResult_Release(task.Id);
+}
+
+void SetMapCpCount() {
+    CTrackMania@ App = cast<CTrackMania@>(GetApp());
+    CSmArenaClient@ Playground = cast<CSmArenaClient@>(App.CurrentPlayground);
+
+    if (
+        App.RootMap is null
+        || Playground is null
+        || Playground.Arena is null
+        || Playground.Arena.MapLandmarks.Length == 0
+    ) {
+        Reset();
+        return;
+    }
+
+    mapCpCount = 1;
+    dictionary@ linked = dictionary();
+
+    for (uint i = 0; i < Playground.Arena.MapLandmarks.Length; i++) {
+        CGameScriptMapLandmark@ Landmark = Playground.Arena.MapLandmarks[i];
+        if (
+            Landmark is null
+            || Landmark.Waypoint is null
+            || Landmark.Waypoint.IsFinish
+            || Landmark.Waypoint.IsMultiLap
+        )
+            continue;
+
+        if (Landmark.Tag == "LinkedCheckpoint")
+            linked.Set(tostring(Landmark.Order), true);
+        else
+            mapCpCount++;
+    }
+
+    mapCpCount += linked.GetSize();
+
+    if (App.RootMap.TMObjective_IsLapRace)
+        mapCpCount *= App.RootMap.TMObjective_NbLaps;
+}
+
 void Reset() {
-    bestCpTimes.RemoveRange(0, bestCpTimes.Length);
+    bestCpTimes = {};
     cpCount = 0;
-    cpTimes.RemoveRange(0, cpTimes.Length);
+    cpTimes = {};
     lastCpTime = 0;
     mapCpCount = -1;
     ResetIntercept();
