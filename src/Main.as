@@ -1,5 +1,5 @@
 // c 2024-03-05
-// m 2024-04-01
+// m 2024-04-02
 
 uint[]       bestCpTimes;
 int          cpCount;
@@ -272,6 +272,7 @@ void RenderMenu() {
 void OnEnteredMap() {
     print("OnEnteredMap");
 
+    Intercept();
     SetMapCpCount();
     SetBestCpTimes();
 }
@@ -330,7 +331,7 @@ void SetBestCpTimes() {
 
     CGameGhostScript@ ghost = task.Ghost;
     if (ghost is null) {
-        warn("SetBestCpTimes: task ghost is null");
+        trace("SetBestCpTimes: task ghost is null - player likely has no PB on the map");
         CMAP.ScoreMgr.TaskResult_Release(task.Id);
         return;
     }
@@ -374,6 +375,7 @@ void SetMapCpCount() {
 
     if (
         App.RootMap is null
+        || App.RootMap.TMObjective_AuthorTime == uint(-1)
         || Playground is null
         || Playground.Arena is null
         || Playground.Arena.MapLandmarks.Length == 0
@@ -409,9 +411,9 @@ void SetMapCpCount() {
 
 void Reset() {
     bestCpTimes = {};
-    cpCount = 0;
-    cpTimes = {};
-    lastCpTime = 0;
-    mapCpCount = -1;
+    cpCount     = 0;
+    cpTimes     = {};
+    lastCpTime  = 0;
+    mapCpCount  = -1;
     ResetIntercept();
 }

@@ -49,6 +49,11 @@ bool _Intercept(CMwStack &in stack, CMwNod@ nod) {
 }
 
 void CaptureEvent(const string &in type, MwFastBuffer<wstring> &in data) {
+    // string[] _data;
+    // for (uint i = 0; i < data.Length; i++)
+    //     _data.InsertLast(data[i]);
+    // print(string::Join(_data, " | "));
+
     if (type != "TMGame_RaceCheckpoint_Waypoint")
         return;
 
