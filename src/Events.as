@@ -1,7 +1,13 @@
 // c 2024-03-08
-// m 2024-03-09
+// m 2024-04-02
 
-bool intercepting = false;
+int    cpCount;
+int[]  cpTimes;
+bool   intercepting = false;
+int    lastCpTime;
+int    mapCpCount   = 0;
+
+#if !DEPENDENCY_MLFEEDRACEDATA
 
 void Intercept() {
     if (intercepting) {
@@ -49,6 +55,9 @@ bool _Intercept(CMwStack &in stack, CMwNod@ nod) {
 }
 
 void CaptureEvent(const string &in type, MwFastBuffer<wstring> &in data) {
+    // if (type == "E++_MappingTime")
+    //     return;
+
     // string[] _data;
     // for (uint i = 0; i < data.Length; i++)
     //     _data.InsertLast(data[i]);
@@ -60,6 +69,11 @@ void CaptureEvent(const string &in type, MwFastBuffer<wstring> &in data) {
     cpCount = Text::ParseInt(data[6]);
 
     const int cpTime = Text::ParseInt(data[0]);
+    if (lastCpTime == cpTime)
+        return;  // when 'testing with mode' in the editor, for some reason events get sort of doubled
+
     cpTimes.InsertLast(cpTime);
     lastCpTime = cpTime;
 }
+
+#endif

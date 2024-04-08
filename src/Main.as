@@ -2,19 +2,17 @@
 // m 2024-04-02
 
 uint[]       bestCpTimes;
-int          cpCount;
-int[]        cpTimes;
-int          lastCpTime;
 bool         lastTaskSuccess = false;
 MwId         localId;
 string       localLogin;
 string       localName;
-int          mapCpCount      = 0;
 const vec4   rowBgAltColor   = vec4(0.0f, 0.0f, 0.0f, 0.5f);
 const string title           = "\\$FA0" + Icons::Flag + "\\$G Better Copium Timer";
 
+#if !DEPENDENCY_MLFEEDRACEDATA
 void OnDestroyed() { ResetIntercept(); }
 void OnDisabled()  { ResetIntercept(); }
+#endif
 
 void Main() {
     startnew(CacheLocalId);
@@ -23,6 +21,14 @@ void Main() {
 
     ChangeFont();
     OnSettingsChanged();
+
+#if !DEPENDENCY_MLFEEDRACEDATA
+
+#if TMNEXT
+    const string msg = "The plugin 'MLFeed: Race Data' is highly recommended for Trackmania (2020) - please install it through the Plugin Manager (disable this warning in settings)";
+    warn(msg);
+    UI::ShowNotification(title, msg, vec4(1.0f, 0.3f, 0.0f, 0.5f), 10000);
+#endif
 
     bool inMap;
     bool wasInMap = InMap();
@@ -71,6 +77,7 @@ void Main() {
                 yield();
         } catch { }
     }
+#endif
 }
 
 void OnSettingsChanged() {
@@ -102,11 +109,15 @@ void Render() {
         || Playground.UIConfigs.Length == 0
         || Playground.UIConfigs[0] is null
     ) {
+#if !DEPENDENCY_MLFEEDRACEDATA
         Reset();
+#endif
         return;
     }
 
+// #if !DEPENDENCY_MLFEEDRACEDATA
     RenderDebug();
+// #endif
 
     if (Playground.GameTerminals[0].GUIPlayer is null)
         return;
@@ -123,6 +134,8 @@ void Render() {
     )
         return;
 
+#if DEPENDENCY_MLFEEDRACEDATA
+
     const MLFeed::HookRaceStatsEventsBase_V4@ raceData = MLFeed::GetRaceData_V4();
     if (raceData is null)
         return;
@@ -131,17 +144,16 @@ void Render() {
     if (cpInfo is null || !cpInfo.IsLocalPlayer)
         return;
 
-    //##########################################################################
-
-    // const int    mapCpCount            = raceData.CPsToFinish;
-    // const int    cpCount               = cpInfo.cpCount;
-    // const int[]  cpTimes               = cpInfo.cpTimes;
-    // cpTimes                            = cpInfo.cpTimes;
-    // const int    lastCpTime            = cpInfo.lastCpTime;
+    const int    mapCpCount            = raceData.CPsToFinish;
+    const int    cpCount               = cpInfo.cpCount;
+    const int[]  cpTimes               = cpInfo.cpTimes;
+    const int    lastCpTime            = cpInfo.lastCpTime;
     const int    LastTheoreticalCpTime = cpInfo.LastTheoreticalCpTime;
-    // const uint   NbRespawnsRequested   = cpInfo.NbRespawnsRequested;
+    const uint   NbRespawnsRequested   = cpInfo.NbRespawnsRequested;
     const int    TheoreticalRaceTime   = cpInfo.TheoreticalRaceTime;
     const int[]@ TimeLostToRespawnByCp = cpInfo.TimeLostToRespawnByCp;
+
+#else
 
     CSmScriptPlayer@ ScriptPlayer = cast<CSmScriptPlayer@>(ViewingPlayer.ScriptAPI);
     if (ScriptPlayer is null || ScriptPlayer.Score is null)
@@ -150,14 +162,20 @@ void Render() {
 
     if (Network.PlaygroundClientScriptAPI.GameTime - ScriptPlayer.StartTime < 0) {
         cpCount = 0;
-        cpTimes.RemoveRange(0, cpTimes.Length);
+        cpTimes = {};
         lastCpTime = 0;
         return;
     }
 
-    //##########################################################################
+#endif
 
-    if (!S_Debug && NbRespawnsRequested == 0)
+    if (
+        true
+#if !DEPENDENCY_MLFEEDRACEDATA
+        && !S_Debug
+#endif
+        && NbRespawnsRequested == 0
+    )
         return;
 
     const bool finished = cpCount == mapCpCount;
@@ -269,6 +287,8 @@ void RenderMenu() {
         S_Enabled = !S_Enabled;
 }
 
+#if !DEPENDENCY_MLFEEDRACEDATA
+
 void OnEnteredMap() {
     print("OnEnteredMap");
 
@@ -278,16 +298,19 @@ void OnEnteredMap() {
 }
 
 void Reset() {
+    ResetIntercept();
     bestCpTimes = {};
     cpCount     = 0;
     cpTimes     = {};
     lastCpTime  = 0;
     mapCpCount  = -1;
-    ResetIntercept();
 }
 
 void SetBestCpTimes() {
     print("SetBestCpTimes");
+
+    // bestCpTimes = { 3722, 5309 };
+    // return;
 
     CTrackMania@ App = cast<CTrackMania@>(GetApp());
     CTrackManiaNetwork@ Network = cast<CTrackManiaNetwork@>(App.Network);
@@ -417,3 +440,5 @@ void SetMapCpCount() {
     if (App.RootMap.TMObjective_IsLapRace)
         mapCpCount *= App.RootMap.TMObjective_NbLaps;
 }
+
+#endif

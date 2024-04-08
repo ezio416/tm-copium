@@ -14,8 +14,9 @@ vec4 GetMedalColor(const int medal) {
 bool InMap() {
     CTrackMania@ App = cast<CTrackMania@>(GetApp());
 
-    return App.Editor is null
-        && App.RootMap !is null
+    return
+        // App.Editor is null
+        App.RootMap !is null
         && App.CurrentPlayground !is null
         && App.Network.ClientManiaAppPlayground !is null;
 }

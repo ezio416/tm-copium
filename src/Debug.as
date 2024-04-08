@@ -1,5 +1,5 @@
 // c 2024-03-07
-// m 2024-03-30
+// m 2024-04-02
 
 void RenderDebug() {
     if (!S_Debug)
@@ -9,6 +9,23 @@ void RenderDebug() {
         // UI::Text("cpCount: " + cpCount);
         // UI::Text("lastCpTime: " + Time::Format(lastCpTime));
         // UI::Text("mapCpCount: " + mapCpCount);
+
+        const MLFeed::HookRaceStatsEventsBase_V4@ raceData = MLFeed::GetRaceData_V4();
+        if (raceData is null) {
+            UI::End();
+            return;
+        }
+
+        const MLFeed::PlayerCpInfo_V4@ cpInfo = raceData.GetPlayer_V4(localName);
+        if (cpInfo is null || !cpInfo.IsLocalPlayer) {
+            UI::End();
+            return;
+        }
+
+        mapCpCount  = raceData.CPsToFinish;
+        bestCpTimes = cpInfo.BestRaceTimes;
+        cpTimes     = cpInfo.cpTimes;
+        cpTimes.RemoveAt(0);
 
         if (UI::BeginTable("##cp-table", 4, UI::TableFlags::RowBg | UI::TableFlags::ScrollY)) {
             UI::PushStyleColor(UI::Col::TableRowBgAlt, rowBgAltColor);
