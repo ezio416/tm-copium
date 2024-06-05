@@ -1,26 +1,5 @@
 // c 2024-04-01
-// m 2024-04-01
-
-void CacheLocalId() {
-    CTrackMania@ App = cast<CTrackMania@>(GetApp());
-
-    while (true) {
-        sleep(97);
-
-        if (
-            App.UserManagerScript is null
-            || App.UserManagerScript.Users.Length == 0
-            || App.UserManagerScript.Users[0] is null
-        )
-            continue;
-
-        localId = App.UserManagerScript.Users[0].Id;
-        if (localId.Value == 0 || localId.GetName().Length == 0)
-            continue;
-
-        break;
-    }
-}
+// m 2024-04-08
 
 void CacheLocalLogin() {
     while (true) {

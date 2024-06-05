@@ -1,83 +1,42 @@
 // c 2024-03-05
-// m 2024-04-02
+// m 2024-04-10
 
 uint[]       bestCpTimes;
-bool         lastTaskSuccess = false;
-MwId         localId;
 string       localLogin;
 string       localName;
-const vec4   rowBgAltColor   = vec4(0.0f, 0.0f, 0.0f, 0.5f);
-const string title           = "\\$FA0" + Icons::Flag + "\\$G Better Copium Timer";
+const vec4   rowBgAltColor = vec4(0.0f, 0.0f, 0.0f, 0.5f);
+const string title         = "\\$FA0" + Icons::Flag + "\\$G Better Copium Timer";
 
-#if !DEPENDENCY_MLFEEDRACEDATA
-void OnDestroyed() { ResetIntercept(); }
-void OnDisabled()  { ResetIntercept(); }
-#endif
+const MLFeed::HookRaceStatsEventsBase_V4@ raceData;
+const MLFeed::PlayerCpInfo_V4@            cpInfo;
 
 void Main() {
-    startnew(CacheLocalId);
     startnew(CacheLocalLogin);
     startnew(CacheLocalName);
 
     ChangeFont();
     OnSettingsChanged();
 
-#if !DEPENDENCY_MLFEEDRACEDATA
-
-#if TMNEXT
-    const string msg = "The plugin 'MLFeed: Race Data' is highly recommended for Trackmania (2020) - please install it through the Plugin Manager (disable this warning in settings)";
-    warn(msg);
-    UI::ShowNotification(title, msg, vec4(1.0f, 0.3f, 0.0f, 0.5f), 10000);
-#endif
-
-    bool inMap;
-    bool wasInMap = InMap();
-
-    if (wasInMap)
-        OnEnteredMap();
-
-    CTrackMania@ App = cast<CTrackMania@>(GetApp());
-    CTrackManiaNetwork@ Network = cast<CTrackManiaNetwork@>(App.Network);
-
     while (true) {
         yield();
 
-        inMap = InMap();
+        @raceData = null;
+        @cpInfo   = null;
 
-        if (!inMap) {
-            wasInMap = false;
-            Reset();
-            continue;
-        }
-
-        if (!wasInMap) {
-            wasInMap = true;
-            OnEnteredMap();
-        }
-
-        CGameManiaAppPlayground@ CMAP = Network.ClientManiaAppPlayground;
-
-        if (
-            CMAP.UI is null
-            || CMAP.UI.UISequence != CGamePlaygroundUIConfig::EUISequence::Finish
-        )
+        if (!S_Enabled)
             continue;
 
-        const uint yieldFrames = App.PlaygroundScript is null ? 50 : 20;
-        for (uint i = 0; i < yieldFrames; i++)
-            yield();  // allow game to process PB
+        @raceData = MLFeed::GetRaceData_V4();
+        if (raceData is null)
+            continue;
 
-        SetBestCpTimes();
+        @cpInfo = raceData.GetPlayer_V4(localName);
+        if (cpInfo is null)
+            continue;
 
-        try {
-            while (
-                CMAP.UI.UISequence == CGamePlaygroundUIConfig::EUISequence::Finish
-                || CMAP.UI.UISequence == CGamePlaygroundUIConfig::EUISequence::EndRound
-            )
-                yield();
-        } catch { }
+        if (!cpInfo.IsLocalPlayer)
+            @cpInfo = null;
     }
-#endif
 }
 
 void OnSettingsChanged() {
@@ -90,6 +49,8 @@ void OnSettingsChanged() {
 }
 
 void Render() {
+    RenderDebug();
+
     if (
         !S_Enabled
         || (S_HideWithGame && !UI::IsGameUIVisible())
@@ -98,7 +59,6 @@ void Render() {
         return;
 
     CTrackMania@ App = cast<CTrackMania@>(GetApp());
-    CTrackManiaNetwork@ Network = cast<CTrackManiaNetwork@>(App.Network);
     CSmArenaClient@ Playground = cast<CSmArenaClient@>(App.CurrentPlayground);
 
     if (
@@ -108,16 +68,10 @@ void Render() {
         || Playground.GameTerminals[0] is null
         || Playground.UIConfigs.Length == 0
         || Playground.UIConfigs[0] is null
-    ) {
-#if !DEPENDENCY_MLFEEDRACEDATA
-        Reset();
-#endif
+        || raceData is null
+        || cpInfo is null
+    )
         return;
-    }
-
-// #if !DEPENDENCY_MLFEEDRACEDATA
-    RenderDebug();
-// #endif
 
     if (Playground.GameTerminals[0].GUIPlayer is null)
         return;
@@ -134,16 +88,6 @@ void Render() {
     )
         return;
 
-#if DEPENDENCY_MLFEEDRACEDATA
-
-    const MLFeed::HookRaceStatsEventsBase_V4@ raceData = MLFeed::GetRaceData_V4();
-    if (raceData is null)
-        return;
-
-    const MLFeed::PlayerCpInfo_V4@ cpInfo = raceData.GetPlayer_V4(localName);
-    if (cpInfo is null || !cpInfo.IsLocalPlayer)
-        return;
-
     const int    mapCpCount            = raceData.CPsToFinish;
     const int    cpCount               = cpInfo.cpCount;
     const int[]  cpTimes               = cpInfo.cpTimes;
@@ -153,36 +97,11 @@ void Render() {
     const int    TheoreticalRaceTime   = cpInfo.TheoreticalRaceTime;
     const int[]@ TimeLostToRespawnByCp = cpInfo.TimeLostToRespawnByCp;
 
-#else
-
-    CSmScriptPlayer@ ScriptPlayer = cast<CSmScriptPlayer@>(ViewingPlayer.ScriptAPI);
-    if (ScriptPlayer is null || ScriptPlayer.Score is null)
-        return;
-    const uint NbRespawnsRequested = ScriptPlayer.Score.NbRespawnsRequested;
-
-    if (Network.PlaygroundClientScriptAPI.GameTime - ScriptPlayer.StartTime < 0) {
-        cpCount = 0;
-        cpTimes = {};
-        lastCpTime = 0;
-        return;
-    }
-
-#endif
-
-    if (
-        true
-#if !DEPENDENCY_MLFEEDRACEDATA
-        && !S_Debug
-#endif
-        && NbRespawnsRequested == 0
-    )
+    if (NbRespawnsRequested == 0)
         return;
 
     const bool finished = cpCount == mapCpCount;
     const uint theoreticalTime = finished ? LastTheoreticalCpTime : Math::Max(0, TheoreticalRaceTime);
-
-    if (NbRespawnsRequested == 0)
-        return;
 
     string text = Time::Format(theoreticalTime);
 
@@ -286,159 +205,3 @@ void RenderMenu() {
     if (UI::MenuItem(title, "", S_Enabled))
         S_Enabled = !S_Enabled;
 }
-
-#if !DEPENDENCY_MLFEEDRACEDATA
-
-void OnEnteredMap() {
-    print("OnEnteredMap");
-
-    Intercept();
-    SetMapCpCount();
-    SetBestCpTimes();
-}
-
-void Reset() {
-    ResetIntercept();
-    bestCpTimes = {};
-    cpCount     = 0;
-    cpTimes     = {};
-    lastCpTime  = 0;
-    mapCpCount  = -1;
-}
-
-void SetBestCpTimes() {
-    print("SetBestCpTimes");
-
-    // bestCpTimes = { 3722, 5309 };
-    // return;
-
-    CTrackMania@ App = cast<CTrackMania@>(GetApp());
-    CTrackManiaNetwork@ Network = cast<CTrackManiaNetwork@>(App.Network);
-    CGameManiaAppPlayground@ CMAP = Network.ClientManiaAppPlayground;
-
-    lastTaskSuccess = false;
-
-    if (
-        App.RootMap is null
-        || CMAP is null
-        || CMAP.ScoreMgr is null
-    )
-        return;
-
-    const uint64 start = Time::Now;
-    const uint64 maxTime = 2000;
-
-    while (localId.Value == 0) {
-        yield();
-
-        if (Time::Now - start > maxTime) {
-            warn("SetBestCpTimes: waited too long for localId to be valid (" + maxTime + " ms)");
-            return;
-        }
-    }
-
-    CWebServicesTaskResult_GhostScript@ task = CMAP.ScoreMgr.Map_GetRecordGhost_v2(
-        localId,
-        App.RootMap.EdChallengeId,
-        "PersonalBest",
-        "",
-        "TimeAttack",
-        ""
-    );
-
-    while (task.IsProcessing) {
-        yield();
-
-        if (CMAP is null || CMAP.ScoreMgr is null || task is null) {
-            warn("SetBestCpTimes: something is null, getting PB ghost failed");
-            return;
-        }
-    }
-
-    if (task.HasFailed || !task.HasSucceeded) {
-        warn("SetBestCpTimes: task failed");
-        CMAP.ScoreMgr.TaskResult_Release(task.Id);
-        return;
-    }
-
-    CGameGhostScript@ ghost = task.Ghost;
-    if (ghost is null) {
-        trace("SetBestCpTimes: task ghost is null - player likely has no PB on the map");
-        CMAP.ScoreMgr.TaskResult_Release(task.Id);
-        return;
-    }
-
-    CTmRaceResultNod@ result = ghost.Result;
-    if (result is null) {
-        warn("SetBestCpTimes: task ghost result is null");
-        CMAP.ScoreMgr.TaskResult_Release(task.Id);
-
-        if (CMAP.DataFileMgr !is null)
-            CMAP.DataFileMgr.Ghost_Release(ghost.Id);
-
-        return;
-    }
-
-    bestCpTimes = {};
-    lastTaskSuccess = true;
-
-    if (result.Checkpoints.Length == 0) {
-        warn("task ghost result has no checkpoints");
-
-        if (CMAP.DataFileMgr !is null)
-            CMAP.DataFileMgr.Ghost_Release(ghost.Id);
-
-        CMAP.ScoreMgr.TaskResult_Release(task.Id);
-        return;
-    }
-
-    for (uint i = 0; i < result.Checkpoints.Length; i++)
-        bestCpTimes.InsertLast(result.Checkpoints[i]);
-
-    if (CMAP.DataFileMgr !is null)
-        CMAP.DataFileMgr.Ghost_Release(ghost.Id);
-
-    CMAP.ScoreMgr.TaskResult_Release(task.Id);
-}
-
-void SetMapCpCount() {
-    CTrackMania@ App = cast<CTrackMania@>(GetApp());
-    CSmArenaClient@ Playground = cast<CSmArenaClient@>(App.CurrentPlayground);
-
-    if (
-        App.RootMap is null
-        || App.RootMap.TMObjective_AuthorTime == uint(-1)
-        || Playground is null
-        || Playground.Arena is null
-        || Playground.Arena.MapLandmarks.Length == 0
-    ) {
-        Reset();
-        return;
-    }
-
-    mapCpCount = 1;
-    dictionary@ linked = dictionary();
-
-    for (uint i = 0; i < Playground.Arena.MapLandmarks.Length; i++) {
-        CGameScriptMapLandmark@ Landmark = Playground.Arena.MapLandmarks[i];
-        if (
-            Landmark is null
-            || Landmark.Waypoint is null
-            || Landmark.Waypoint.IsFinish
-            || Landmark.Waypoint.IsMultiLap
-        )
-            continue;
-
-        if (Landmark.Tag == "LinkedCheckpoint")
-            linked.Set(tostring(Landmark.Order), true);
-        else
-            mapCpCount++;
-    }
-
-    mapCpCount += linked.GetSize();
-
-    if (App.RootMap.TMObjective_IsLapRace)
-        mapCpCount *= App.RootMap.TMObjective_NbLaps;
-}
-
-#endif

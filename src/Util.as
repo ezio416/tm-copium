@@ -1,7 +1,7 @@
 // c 2024-03-05
-// m 2024-04-01
+// m 2024-04-08
 
-vec4 GetMedalColor(const int medal) {
+const vec4 GetMedalColor(const int medal) {
     switch (medal) {
         case 4:  return S_AuthorColor;
         case 3:  return S_GoldColor;
@@ -11,17 +11,7 @@ vec4 GetMedalColor(const int medal) {
     }
 }
 
-bool InMap() {
-    CTrackMania@ App = cast<CTrackMania@>(GetApp());
-
-    return
-        // App.Editor is null
-        App.RootMap !is null
-        && App.CurrentPlayground !is null
-        && App.Network.ClientManiaAppPlayground !is null;
-}
-
-int SumAllButLast(const int[] times) {
+const int SumAllButLast(const int[] times) {
     int total = 0;
 
     for (uint i = 0; i < times.Length - 1; i++)
@@ -30,7 +20,7 @@ int SumAllButLast(const int[] times) {
     return total;
 }
 
-string TimeFormat(int64 time) {
+const string TimeFormat(int64 time) {
     string str = "+";
 
     if (time < 0) {
