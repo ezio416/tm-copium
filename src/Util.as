@@ -1,35 +1,52 @@
 // c 2024-03-05
-// m 2024-04-01
+// m 2024-06-09
 
-vec4 GetMedalColor(const int medal) {
+// courtesy of "Auto-hide Opponents" plugin - https://github.com/XertroV/tm-autohide-opponents
+void CacheLocalLogin() {
+    while (true) {
+        sleep(100);
+
+        loginLocal = GetLocalLogin();
+
+        if (loginLocal.Length > 10)
+            break;
+    }
+}
+
+const vec4 GetMedalColor(const int medal) {
     switch (medal) {
-        case 4:  return S_AuthorColor;
-        case 3:  return S_GoldColor;
-        case 2:  return S_SilverColor;
-        case 1:  return S_BronzeColor;
+        case 4: return S_AuthorColor;
+        case 3: return S_GoldColor;
+        case 2: return S_SilverColor;
+        case 1: return S_BronzeColor;
         default: return vec4();
     }
 }
 
-bool InMap() {
-    CTrackMania@ App = cast<CTrackMania@>(GetApp());
+// courtesy of "Buffer Time" plugin - https://github.com/XertroV/tm-cotd-buffer-time
+const string SeenGhostSaveMap(const MLFeed::GhostInfo_V2@ ghost) {
+    const string key = ghost.Nickname + (ghost.Checkpoints.Length << 12 ^ ghost.Result_Time);
 
-    return App.Editor is null
-        && App.RootMap !is null
-        && App.CurrentPlayground !is null
-        && App.Network.ClientManiaAppPlayground !is null;
+    if (!ghostFirstSeenMap.Exists(key))
+        ghostFirstSeenMap[key] = GetApp().RootMap.EdChallengeId;
+
+    return key;
 }
 
-int SumAllButLast(const int[] times) {
+const int SumAllButLast(const int[] times) {
     int total = 0;
 
-    for (uint i = 0; i < times.Length - 1; i++)
+    for (uint i = 0; i < times.Length; i++) {
+        if (i == times.Length - 1)
+            break;
+
         total += times[i];
+    }
 
     return total;
 }
 
-string TimeFormat(int64 time) {
+const string TimeFormat(int64 time) {
     string str = "+";
 
     if (time < 0) {

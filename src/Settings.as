@@ -1,5 +1,5 @@
 // c 2024-03-05
-// m 2024-03-18
+// m 2024-06-09
 
 [Setting category="General" name="Show timer"]
 bool S_Enabled = true;
@@ -29,7 +29,7 @@ uint S_FontSize = 24;
 [Setting category="Position/Style" name="Font color" color]
 vec4 S_FontColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 
-[Setting category="Position/Style" name="Show number of respawns"]
+[Setting category="Position/Style" name="Show number of respawns after finish"]
 bool S_Respawns = true;
 
 enum BackgroundOption {
@@ -55,15 +55,12 @@ float S_BackgroundRadius = 10.0f;
 
 [Setting category="Position/Style" name="Positive delta color" description="slower than PB" color]
 vec4 S_PositiveColor = vec4(0.8f, 0.0f, 0.0f, 0.8f);
-string negColorUi;
 
 [Setting category="Position/Style" name="Neutral delta color" description="equal to PB" color]
 vec4 S_NeutralColor = vec4(0.7f, 0.7f, 0.7f, 0.8f);
-string neuColorUi;
 
 [Setting category="Position/Style" name="Negative delta color" description="faster than PB" color]
 vec4 S_NegativeColor = vec4(0.0f, 0.0f, 0.8f, 0.8f);
-string posColorUi;
 
 [Setting category="Position/Style" name="Show drop shadow"]
 bool S_Drop = true;
@@ -74,11 +71,11 @@ vec4 S_DropColor = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 [Setting category="Position/Style" name="Drop shadow offset" min=1 max=10]
 int S_DropOffset = 2;
 
-[Setting category="Position/Style" name="Show medal icons after finish" description="only if you would've gotten any"]
+[Setting category="Position/Style" name="Show medal icons after finish"]
 bool S_Medals = true;
 
 [Setting category="Position/Style" name="Author medal" color]
-vec4 S_AuthorColor = vec4(0.000f, 0.471f, 0.035f, 1.0f);
+vec4 S_AuthorColor = vec4(0.0f, 0.471f, 0.035f, 1.0f);
 
 [Setting category="Position/Style" name="Gold medal" color]
 vec4 S_GoldColor = vec4(0.871f, 0.737f, 0.259f, 1.0f);
@@ -87,4 +84,4 @@ vec4 S_GoldColor = vec4(0.871f, 0.737f, 0.259f, 1.0f);
 vec4 S_SilverColor = vec4(0.537f, 0.604f, 0.604f, 1.0f);
 
 [Setting category="Position/Style" name="Bronze medal" color]
-vec4 S_BronzeColor = vec4(0.604f, 0.400f, 0.259f, 1.0f);
+vec4 S_BronzeColor = vec4(0.604f, 0.4f, 0.259f, 1.0f);
