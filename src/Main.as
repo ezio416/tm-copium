@@ -62,13 +62,6 @@ void Render() {
 
     RenderDebug();
 
-    if (Playground.GameTerminals[0].GUIPlayer is null)
-        return;
-
-    CSmPlayer@ ViewingPlayer = VehicleState::GetViewingPlayer();
-    if (ViewingPlayer is null || ViewingPlayer.ScriptAPI.Login != loginLocal)
-        return;
-
     const CGamePlaygroundUIConfig::EUISequence Sequence = Playground.UIConfigs[0].UISequence;
     if (
         Sequence != CGamePlaygroundUIConfig::EUISequence::EndRound
@@ -76,6 +69,20 @@ void Render() {
         && Sequence != CGamePlaygroundUIConfig::EUISequence::Playing
     )
         return;
+
+    if (
+        Sequence == CGamePlaygroundUIConfig::EUISequence::Playing
+        && Playground.GameTerminals[0].GUIPlayer is null
+    )
+        return;  // watching replay
+
+    CSmPlayer@ ViewingPlayer = VehicleState::GetViewingPlayer();
+    if (
+        ViewingPlayer !is null
+        && ViewingPlayer.ScriptAPI !is null
+        && ViewingPlayer.ScriptAPI.Login != loginLocal
+    )
+        return;  // spectating
 
     const MLFeed::HookRaceStatsEventsBase_V4@ raceData = MLFeed::GetRaceData_V4();
     if (raceData is null)
