@@ -167,7 +167,12 @@ void Render() {
     int medal = 0;
 
     if (finished) {
-        if (theoreticalTime <= App.RootMap.TMObjective_AuthorTime)
+        if (false) {}
+#if DEPENDENCY_CHAMPIONMEDALS
+        else if (theoreticalTime <= ChampionMedals::GetCMTime())
+            medal = 5;
+#endif
+        else if (theoreticalTime <= App.RootMap.TMObjective_AuthorTime)
             medal = 4;
         else if (theoreticalTime <= App.RootMap.TMObjective_GoldTime)
             medal = 3;

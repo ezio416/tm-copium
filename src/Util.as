@@ -15,6 +15,9 @@ void CacheLocalLogin() {
 
 const vec4 GetMedalColor(const int medal) {
     switch (medal) {
+#if DEPENDENCY_CHAMPIONMEDALS
+        case 5: return S_ChampionColor;
+#endif
         case 4: return S_AuthorColor;
         case 3: return S_GoldColor;
         case 2: return S_SilverColor;

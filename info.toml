@@ -7,3 +7,4 @@ siteid = 500
 
 [script]
 dependencies = [ "VehicleState", "MLHook", "MLFeedRaceData" ]
+optional_dependencies = [ "ChampionMedals" ]

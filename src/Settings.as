@@ -74,6 +74,11 @@ int S_DropOffset = 2;
 [Setting category="Position/Style" name="Show medal icons after finish"]
 bool S_Medals = true;
 
+#if DEPENDENCY_CHAMPIONMEDALS
+[Setting category="Position/Style" name="Champion medal" color]
+vec4 S_ChampionColor = vec4(1.0f, 0.267f, 0.467f, 1.0f);
+#endif
+
 [Setting category="Position/Style" name="Author medal" color]
 vec4 S_AuthorColor = vec4(0.0f, 0.471f, 0.035f, 1.0f);
 
