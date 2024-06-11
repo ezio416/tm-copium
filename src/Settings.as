@@ -44,14 +44,14 @@ BackgroundOption S_Background = BackgroundOption::OnlyBehindDelta;
 [Setting category="Position/Style" name="Background color" color]
 vec4 S_BackgroundColor = vec4(0.0f, 0.0f, 0.0f, 0.7f);
 
-[Setting category="Position/Style" name="Background X-padding" min=0.0f max=30.0f]
-float S_BackgroundXPad = 8.0f;
+// [Setting category="Position/Style" name="Background X-padding" min=0.0f max=30.0f]
+const float S_BackgroundXPad = 8.0f;
 
 [Setting category="Position/Style" name="Background Y-padding" min=0.0f max=30.0f]
-float S_BackgroundYPad = 8.0f;
+float S_BackgroundYPad = 6.0f;
 
-[Setting category="Position/Style" name="Background corner radius" min=0.0f max=20.0f]
-float S_BackgroundRadius = 10.0f;
+[Setting category="Position/Style" name="Background corner radius" min=0.0f max=50.0f]
+float S_BackgroundRadius = 20.0f;
 
 [Setting category="Position/Style" name="Positive delta color" description="slower than PB" color]
 vec4 S_PositiveColor = vec4(0.8f, 0.0f, 0.0f, 0.8f);
