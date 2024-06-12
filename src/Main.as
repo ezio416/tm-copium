@@ -9,7 +9,6 @@ string                      loginLocal;
 string                      myName;
 const MLFeed::GhostInfo_V2@ pbGhost            = null;
 dictionary@                 seenGhosts         = dictionary();
-CpTimeSource                source             = CpTimeSource::None;
 const string                title              = "\\$FA0" + Icons::Flag + "\\$G Better Copium Timer";
 
 void Main() {
@@ -32,8 +31,6 @@ void RenderMenu() {
 }
 
 void Render() {
-    source = CpTimeSource::None;
-
     if (
         !S_Enabled
         || (S_HideWithGame && !UI::IsGameUIVisible())
@@ -59,8 +56,6 @@ void Render() {
         seenGhosts.DeleteAll();
         return;
     }
-
-    RenderDebug();
 
     const CGamePlaygroundUIConfig::EUISequence Sequence = Playground.UIConfigs[0].UISequence;
     if (
@@ -92,9 +87,6 @@ void Render() {
     if (cpInfo is null || !cpInfo.IsLocalPlayer)
         return;
 
-    if (!S_Debug && cpInfo.NbRespawnsRequested == 0)
-        return;
-
     const bool finished = cpInfo.cpCount == int(raceData.CPsToFinish);
     const uint theoreticalTime = finished ? cpInfo.LastTheoreticalCpTime : Math::Max(0, cpInfo.TheoreticalRaceTime);
 
@@ -124,17 +116,10 @@ void Render() {
         }
     }
 
-    if (pbGhost !is null) {
+    if (pbGhost !is null)
         bestCpTimes = pbGhost.Checkpoints;
-        source = CpTimeSource::PbGhost;
-    }
-
-    if (cpInfo.BestRaceTimes.Length == raceData.CPsToFinish) {
-        if (pbGhost is null || cpInfo.bestTime < pbGhost.Result_Time) {
-            bestCpTimes = cpInfo.BestRaceTimes;
-            source = CpTimeSource::CpInfo;
-        }
-    }
+    else if (cpInfo.BestRaceTimes.Length == raceData.CPsToFinish && (pbGhost is null || cpInfo.bestTime < pbGhost.Result_Time))
+        bestCpTimes = cpInfo.BestRaceTimes;
 
     if (cpInfo.NbRespawnsRequested == 0)
         return;

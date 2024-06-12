@@ -1,5 +1,5 @@
 // c 2024-03-05
-// m 2024-06-09
+// m 2024-06-12
 
 [Setting category="General" name="Show timer"]
 bool S_Enabled = true;
@@ -9,9 +9,6 @@ bool S_HideWithGame = true;
 
 [Setting category="General" name="Show/hide with Openplanet UI"]
 bool S_HideWithOP = false;
-
-[Setting category="General" name="Show debug window"]
-bool S_Debug = false;
 
 
 [Setting category="Position/Style" name="Position X" min=0.0f max=1.0f]
