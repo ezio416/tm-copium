@@ -82,7 +82,7 @@ void Render() {
         return;
 
     const MLFeed::PlayerCpInfo_V4@ cpInfo = raceData.GetPlayer_V4(myName);
-    if (cpInfo is null || !cpInfo.IsLocalPlayer)
+    if (cpInfo is null || !cpInfo.IsLocalPlayer || cpInfo.NbRespawnsRequested == 0)
         return;
 
     const bool finished = cpInfo.cpCount == int(raceData.CPsToFinish);
@@ -118,11 +118,9 @@ void Render() {
 
     if (pbGhost !is null)
         bestCpTimes = pbGhost.Checkpoints;
-    else if (cpInfo.BestRaceTimes.Length == raceData.CPsToFinish && cpInfo.bestTime < pbGhost.Result_Time)
-        bestCpTimes = cpInfo.BestRaceTimes;
 
-    if (cpInfo.NbRespawnsRequested == 0)
-        return;
+    if (cpInfo.BestRaceTimes.Length == raceData.CPsToFinish && (pbGhost is null || cpInfo.bestTime < pbGhost.Result_Time))
+        bestCpTimes = cpInfo.BestRaceTimes;
 
     string text = Time::Format(theoreticalTime);
 
