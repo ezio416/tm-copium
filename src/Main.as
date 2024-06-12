@@ -1,7 +1,6 @@
 // c 2024-03-05
 // m 2024-06-12
 
-uint[]                      bestCpTimes;
 dictionary@                 ghostFirstSeenMap  = dictionary();
 int                         highestGhostIdSeen = -1;
 uint                        lastNbGhosts       = 0;
@@ -49,7 +48,6 @@ void Render() {
         || Playground.UIConfigs.Length == 0
         || Playground.UIConfigs[0] is null
     ) {
-        bestCpTimes = {};
         highestGhostIdSeen = -1;
         lastNbGhosts = 0;
         @pbGhost = null;
@@ -116,9 +114,11 @@ void Render() {
         }
     }
 
+    uint[] bestCpTimes = {};
+
     if (pbGhost !is null)
         bestCpTimes = pbGhost.Checkpoints;
-    else if (cpInfo.BestRaceTimes.Length == raceData.CPsToFinish && (pbGhost is null || cpInfo.bestTime < pbGhost.Result_Time))
+    else if (cpInfo.BestRaceTimes.Length == raceData.CPsToFinish && cpInfo.bestTime < pbGhost.Result_Time)
         bestCpTimes = cpInfo.BestRaceTimes;
 
     if (cpInfo.NbRespawnsRequested == 0)
@@ -183,7 +183,7 @@ void Render() {
         nvg::Fill();
     }
 
-    if (S_Background > 0 && bestCpTimes.Length > 0) {
+    if (S_Background > 0 && bestCpTimes.Length > 0 && cpInfo.cpCount > 0) {
         const float diffBgOffset = S_FontSize * 0.125f;
 
         nvg::FillColor(diff > 0 ? S_PositiveColor : diff == 0 ? S_NeutralColor : S_NegativeColor);
