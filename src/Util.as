@@ -1,5 +1,5 @@
 // c 2024-03-05
-// m 2024-06-09
+// m 2024-06-12
 
 // courtesy of "Auto-hide Opponents" plugin - https://github.com/XertroV/tm-autohide-opponents
 void CacheLocalLogin() {
@@ -13,15 +13,15 @@ void CacheLocalLogin() {
     }
 }
 
-const vec4 GetMedalColor(const int medal) {
+const vec4 GetMedalColor(const int &in medal) {
     switch (medal) {
 #if DEPENDENCY_CHAMPIONMEDALS
-        case 5: return S_ChampionColor;
+        case 5:  return S_ChampionColor;
 #endif
-        case 4: return S_AuthorColor;
-        case 3: return S_GoldColor;
-        case 2: return S_SilverColor;
-        case 1: return S_BronzeColor;
+        case 4:  return S_AuthorColor;
+        case 3:  return S_GoldColor;
+        case 2:  return S_SilverColor;
+        case 1:  return S_BronzeColor;
         default: return vec4();
     }
 }
@@ -36,7 +36,7 @@ const string SeenGhostSaveMap(const MLFeed::GhostInfo_V2@ ghost) {
     return key;
 }
 
-const int SumAllButLast(const int[] times) {
+const int SumAllButLast(const int[] &in times) {
     int total = 0;
 
     for (uint i = 0; i < times.Length; i++) {

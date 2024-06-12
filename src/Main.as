@@ -1,5 +1,5 @@
 // c 2024-03-05
-// m 2024-06-09
+// m 2024-06-12
 
 uint[]                      bestCpTimes;
 dictionary@                 ghostFirstSeenMap  = dictionary();
@@ -130,7 +130,7 @@ void Render() {
     }
 
     if (cpInfo.BestRaceTimes.Length == raceData.CPsToFinish) {
-        if (pbGhost is null || (pbGhost !is null && cpInfo.bestTime < pbGhost.Result_Time)) {
+        if (pbGhost is null || cpInfo.bestTime < pbGhost.Result_Time) {
             bestCpTimes = cpInfo.BestRaceTimes;
             source = CpTimeSource::CpInfo;
         }
@@ -167,7 +167,7 @@ void Render() {
     int medal = 0;
 
     if (finished) {
-        if (false) {}
+        if (false) {}  // here so preprocessor works
 #if DEPENDENCY_CHAMPIONMEDALS
         else if (theoreticalTime <= ChampionMedals::GetCMTime())
             medal = 5;
@@ -182,12 +182,15 @@ void Render() {
             medal = 1;
     }
 
+    const float halfSizeX = size.x * 0.5f;
+    const float halfSizeY = size.y * 0.5f;
+
     if (S_Background == BackgroundOption::BehindEverything) {
         nvg::FillColor(S_BackgroundColor);
         nvg::BeginPath();
         nvg::RoundedRect(
-            posX - size.x * 0.5f - S_BackgroundXPad - (S_Medals && medal > 0 ? S_FontSize + radius : 0.0f),
-            posY - size.y * 0.5f - S_BackgroundYPad - 2.0f,
+            posX - halfSizeX - S_BackgroundXPad - (S_Medals && medal > 0 ? S_FontSize + radius : 0.0f),
+            posY - halfSizeY - S_BackgroundYPad - 2.0f,
             size.x + S_BackgroundXPad * 2.0f + (S_Medals && medal > 0 ? (S_FontSize + radius) * 2.0f : 0.0f),
             size.y + S_BackgroundYPad * 2.0f,
             S_BackgroundRadius
@@ -195,14 +198,14 @@ void Render() {
         nvg::Fill();
     }
 
-    if (bestCpTimes.Length > 0 && S_Background > 0) {
+    if (S_Background > 0 && bestCpTimes.Length > 0) {
         const float diffBgOffset = S_FontSize * 0.125f;
 
         nvg::FillColor(diff > 0 ? S_PositiveColor : diff == 0 ? S_NeutralColor : S_NegativeColor);
         nvg::BeginPath();
         nvg::RoundedRect(
-            posX + size.x * 0.5f - diffWidth - diffBgOffset,
-            posY - size.y * 0.5f - S_BackgroundYPad - 2.0f,
+            posX + halfSizeX - diffWidth - diffBgOffset,
+            posY - halfSizeY - S_BackgroundYPad - 2.0f,
             diffWidth + diffBgOffset + S_BackgroundXPad,
             size.y + S_BackgroundYPad * 2.0f,
             S_BackgroundRadius
@@ -219,7 +222,6 @@ void Render() {
     nvg::Text(posX, posY, text);
 
     if (S_Medals && medal > 0) {
-        const float halfSizeX = size.x * 0.5f;
         const float y = posY + 1.0f - S_FontSize * 0.1f;
 
         if (S_Drop) {
