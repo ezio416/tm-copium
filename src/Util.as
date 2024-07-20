@@ -1,5 +1,5 @@
 // c 2024-03-05
-// m 2024-06-12
+// m 2024-07-20
 
 // courtesy of "Auto-hide Opponents" plugin - https://github.com/XertroV/tm-autohide-opponents
 void CacheLocalLogin() {
@@ -16,7 +16,10 @@ void CacheLocalLogin() {
 const vec4 GetMedalColor(const int &in medal) {
     switch (medal) {
 #if DEPENDENCY_CHAMPIONMEDALS
-        case 5:  return S_ChampionColor;
+        case 6:  return S_ChampionColor;
+#endif
+#if DEPENDENCY_WARRIORMEDALS
+        case 5:  return S_WarriorColor;
 #endif
         case 4:  return S_AuthorColor;
         case 3:  return S_GoldColor;

@@ -1,5 +1,5 @@
 // c 2024-03-05
-// m 2024-06-12
+// m 2024-07-20
 
 dictionary@                 ghostFirstSeenMap  = dictionary();
 int                         highestGhostIdSeen = -1;
@@ -150,9 +150,13 @@ void Render() {
     int medal = 0;
 
     if (finished) {
-        if (false) {}  // here so preprocessor works
+        if (false) {}  // here so preprocessors work
 #if DEPENDENCY_CHAMPIONMEDALS
         else if (theoreticalTime <= ChampionMedals::GetCMTime())
+            medal = 6;
+#endif
+#if DEPENDENCY_WARRIORMEDALS
+        else if (theoreticalTime <= WarriorMedals::GetWMTime())
             medal = 5;
 #endif
         else if (theoreticalTime <= App.RootMap.TMObjective_AuthorTime)
