@@ -1,5 +1,5 @@
 // c 2024-03-05
-// m 2024-07-20
+// m 2024-07-21
 
 dictionary@                 ghostFirstSeenMap  = dictionary();
 int                         highestGhostIdSeen = -1;
@@ -40,8 +40,8 @@ void Render() {
     CTrackMania@ App = cast<CTrackMania@>(GetApp());
     CSmArenaClient@ Playground = cast<CSmArenaClient@>(App.CurrentPlayground);
 
-    if (
-        App.RootMap is null
+    if (false
+        || App.RootMap is null
         || Playground is null
         || Playground.GameTerminals.Length == 0
         || Playground.GameTerminals[0] is null
@@ -56,22 +56,22 @@ void Render() {
     }
 
     const CGamePlaygroundUIConfig::EUISequence Sequence = Playground.UIConfigs[0].UISequence;
-    if (
-        Sequence != CGamePlaygroundUIConfig::EUISequence::EndRound
+    if (true
+        && Sequence != CGamePlaygroundUIConfig::EUISequence::EndRound
         && Sequence != CGamePlaygroundUIConfig::EUISequence::Finish
         && Sequence != CGamePlaygroundUIConfig::EUISequence::Playing
     )
         return;
 
-    if (
-        Sequence == CGamePlaygroundUIConfig::EUISequence::Playing
+    if (true
+        && Sequence == CGamePlaygroundUIConfig::EUISequence::Playing
         && Playground.GameTerminals[0].GUIPlayer is null
     )
         return;  // watching replay
 
     CSmPlayer@ ViewingPlayer = VehicleState::GetViewingPlayer();
-    if (
-        ViewingPlayer !is null
+    if (true
+        && ViewingPlayer !is null
         && ViewingPlayer.ScriptAPI !is null
         && ViewingPlayer.ScriptAPI.Login != loginLocal
     )
