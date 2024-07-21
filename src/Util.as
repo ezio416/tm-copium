@@ -13,7 +13,7 @@ void CacheLocalLogin() {
     }
 }
 
-const vec4 GetMedalColor(const int &in medal) {
+vec4 GetMedalColor(const int &in medal) {
     switch (medal) {
 #if DEPENDENCY_CHAMPIONMEDALS
         case 6:  return S_ChampionColor;
@@ -30,7 +30,7 @@ const vec4 GetMedalColor(const int &in medal) {
 }
 
 // courtesy of "Buffer Time" plugin - https://github.com/XertroV/tm-cotd-buffer-time
-const string SeenGhostSaveMap(const MLFeed::GhostInfo_V2@ ghost) {
+string SeenGhostSaveMap(const MLFeed::GhostInfo_V2@ ghost) {
     const string key = ghost.Nickname + (ghost.Checkpoints.Length << 12 ^ ghost.Result_Time);
 
     if (!ghostFirstSeenMap.Exists(key))
@@ -39,20 +39,16 @@ const string SeenGhostSaveMap(const MLFeed::GhostInfo_V2@ ghost) {
     return key;
 }
 
-const int SumAllButLast(const int[] &in times) {
+int SumAllButLast(const int[] &in times) {
     int total = 0;
 
-    for (uint i = 0; i < times.Length; i++) {
-        if (i == times.Length - 1)
-            break;
-
+    for (uint i = 0; i < times.Length - 1; i++)
         total += times[i];
-    }
 
     return total;
 }
 
-const string TimeFormat(int64 time) {
+string TimeFormat(int64 time) {
     string str = "+";
 
     if (time < 0) {
