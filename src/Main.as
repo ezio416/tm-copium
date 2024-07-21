@@ -152,7 +152,7 @@ void Render() {
     if (finished) {
         if (false) {}  // here so preprocessors work
 #if DEPENDENCY_CHAMPIONMEDALS
-        else if (theoreticalTime <= ChampionMedals::GetCMTime())
+        else if (theoreticalTime <= ChampionMedals::GetCMTime())  // not necessarily lower than WM
             medal = 6;
 #endif
 #if DEPENDENCY_WARRIORMEDALS
