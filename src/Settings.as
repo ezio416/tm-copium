@@ -1,5 +1,5 @@
 // c 2024-03-05
-// m 2024-07-20
+// m 2024-07-21
 
 [Setting category="General" name="Show timer"]
 bool S_Enabled = true;
@@ -74,11 +74,6 @@ bool S_Medals = true;
 #if DEPENDENCY_CHAMPIONMEDALS
 [Setting category="Position/Style" name="Champion medal" color]
 vec4 S_ChampionColor = vec4(1.0f, 0.267f, 0.467f, 1.0f);
-#endif
-
-#if DEPENDENCY_WARRIORMEDALS
-[Setting category="Position/Style" name="Warrior medal" color]
-vec4 S_WarriorColor = vec4(0.2f, 0.8f, 1.0f, 1.0f);
 #endif
 
 [Setting category="Position/Style" name="Author medal" color]
