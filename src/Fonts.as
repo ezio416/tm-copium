@@ -1,5 +1,5 @@
 // c 2023-08-16
-// m 2024-01-23
+// m 2024-09-21
 
 nvg::Font font;
 Font currentFont = S_Font;
@@ -14,9 +14,9 @@ void ChangeFont() {
     int f = -1;
 
     switch (S_Font) {
-        case Font::DroidSans:     f = nvg::LoadFont("DroidSans.ttf",      true, true); break;
-        case Font::DroidSansBold: f = nvg::LoadFont("DroidSans-Bold.ttf", true, true); break;
-        case Font::DroidSansMono: f = nvg::LoadFont("DroidSansMono.ttf",  true, true); break;
+        case Font::DroidSans:     f = nvg::LoadFont("DroidSans.ttf");      break;
+        case Font::DroidSansBold: f = nvg::LoadFont("DroidSans-Bold.ttf"); break;
+        case Font::DroidSansMono: f = nvg::LoadFont("DroidSansMono.ttf");  break;
         default: break;
     }
 
