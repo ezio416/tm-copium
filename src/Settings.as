@@ -1,5 +1,5 @@
 // c 2024-03-05
-// m 2024-07-21
+// m 2025-02-24
 
 [Setting category="General" name="Show timer"]
 bool S_Enabled = true;
@@ -28,6 +28,9 @@ vec4 S_FontColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 
 [Setting category="Position/Style" name="Show number of respawns after finish"]
 bool S_Respawns = true;
+
+[Setting category="Position/Style" name="Show thousandths" description="not perfectly accurate"]
+bool S_Thousandths = true;
 
 enum BackgroundOption {
     None,

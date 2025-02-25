@@ -121,6 +121,8 @@ void Render() {
         bestCpTimes = cpInfo.BestRaceTimes;
 
     string text = Time::Format(theoreticalTime);
+    if (!S_Thousandths)
+        text = text.SubStr(0, text.Length - 1);
 
     if (finished && cpInfo.NbRespawnsRequested > 0 && S_Respawns)
         text += " (" + cpInfo.NbRespawnsRequested + " respawn" + (cpInfo.NbRespawnsRequested == 1 ? "" : "s") + ")";
@@ -131,6 +133,8 @@ void Render() {
     if (bestCpTimes.Length > 0 && cpInfo.cpTimes.Length > 1) {
         diff = cpInfo.lastCpTime - bestCpTimes[cpInfo.cpTimes.Length - 2] - SumAllButLast(cpInfo.TimeLostToRespawnByCp);
         diffText = TimeFormat(diff);
+        if (!S_Thousandths)
+            diffText = diffText.SubStr(0, diffText.Length - 1);
         text += (S_Font == Font::DroidSansMono ? " " : "  ") + diffText;
     }
 
