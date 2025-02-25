@@ -17,3 +17,5 @@ Requires [MLFeed](https://openplanet.dev/plugin/mlfeedracedata) dependency (and 
 <!-- ![Version](https://img.shields.io/badge/dynamic/json?query=version&url=https%3A%2F%2Fopenplanet.dev%2Fapi%2Fplugin%2F500&label=Version&color=red) -->
 <!-- ![Game Maniaplanet](https://img.shields.io/badge/Game-Maniaplanet_4-blue) -->
 <!-- ![Game Turbo](https://img.shields.io/badge/Game-Turbo-blue) -->
+
+![image](images/main.png)
