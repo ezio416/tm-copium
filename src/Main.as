@@ -1,5 +1,5 @@
 // c 2024-03-05
-// m 2025-02-24
+// m 2025-02-25
 
 dictionary@                 ghostFirstSeenMap  = dictionary();
 int                         highestGhostIdSeen = -1;
@@ -85,6 +85,8 @@ void Render() {
 
     const bool finished = cpInfo.cpCount == int(raceData.CPsToFinish);
     const uint theoreticalTime = finished ? cpInfo.LastTheoreticalCpTime : Math::Max(0, cpInfo.TheoreticalRaceTime);
+    if (theoreticalTime == 0)
+        return;
 
     const MLFeed::SharedGhostDataHook_V2@ ghostData = MLFeed::GetGhostData();
 
@@ -158,12 +160,33 @@ void Render() {
 #if DEPENDENCY_WARRIORMEDALS
         const uint wm = WarriorMedals::GetWMTime();
 #endif
-        if (false) {}  // here so preprocessors work
-#if DEPENDENCY_CHAMPIONMEDALS
-        else if (theoreticalTime <= cm)  // not necessarily lower than WM
-            medal = 6;
+
+#if DEPENDENCY_CHAMPIONMEDALS && DEPENDENCY_WARRIORMEDALS
+        uint medal5 = 0, medal6 = 0;
+
+        if (cm == 0)
+            medal5 = wm;
+        else if (wm == 0)
+            medal5 = cm;
+        else if (cm <= wm) {
+            medal5 = wm;
+            medal6 = cm;
+        } else {
+            medal5 = cm;
+            medal6 = wm;
+        }
 #endif
-#if DEPENDENCY_WARRIORMEDALS
+
+        if (false) {}  // here so preprocessors work
+#if DEPENDENCY_CHAMPIONMEDALS && DEPENDENCY_WARRIORMEDALS
+        else if (theoreticalTime <= medal6)
+            medal = 6;
+        else if (theoreticalTime <= medal5)
+            medal = 5;
+#elif DEPENDENCY_CHAMPIONMEDALS && !DEPENDENCY_WARRIORMEDALS
+        else if (theoreticalTime <= cm)
+            medal = 5;
+#elif !DEPENDENCY_CHAMPIONMEDALS && DEPENDENCY_WARRIORMEDALS
         else if (theoreticalTime <= wm)
             medal = 5;
 #endif

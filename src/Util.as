@@ -1,5 +1,5 @@
 // c 2024-03-05
-// m 2024-07-21
+// m 2025-02-25
 
 // courtesy of "Auto-hide Opponents" plugin - https://github.com/XertroV/tm-autohide-opponents
 void CacheLocalLogin() {
@@ -13,13 +13,25 @@ void CacheLocalLogin() {
     }
 }
 
-vec4 GetMedalColor(const int &in medal) {
-    switch (medal) {
-#if DEPENDENCY_CHAMPIONMEDALS
-        case 6:  return S_ChampionColor;
+vec4 GetMedalColor(int medal) {
+#if DEPENDENCY_CHAMPIONMEDALS && DEPENDENCY_WARRIORMEDALS
+        const bool cmFaster = ChampionMedals::GetCMTime() <= WarriorMedals::GetWMTime();
 #endif
-#if DEPENDENCY_WARRIORMEDALS
-        case 5:  return vec4(WarriorMedals::GetColorVec(), 1.0f);
+
+    switch (medal) {
+#if DEPENDENCY_CHAMPIONMEDALS && DEPENDENCY_WARRIORMEDALS
+        case 6:
+            return cmFaster
+                ? S_ChampionColor
+                : vec4(WarriorMedals::GetColorVec(), 1.0f);
+        case 5:
+            return cmFaster
+                ? vec4(WarriorMedals::GetColorVec(), 1.0f)
+                : S_ChampionColor;
+#elif DEPENDENCY_CHAMPIONMEDALS && !DEPENDENCY_WARRIORMEDALS
+        case 5: return S_ChampionColor;
+#elif !DEPENDENCY_CHAMPIONMEDALS && DEPENDENCY_WARRIORMEDALS
+        case 5: return vec4(WarriorMedals::GetColorVec(), 1.0f);
 #endif
         case 4:  return S_AuthorColor;
         case 3:  return S_GoldColor;
