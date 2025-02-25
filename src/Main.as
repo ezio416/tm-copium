@@ -150,13 +150,19 @@ void Render() {
     int medal = 0;
 
     if (finished) {
+#if DEPENDENCY_CHAMPIONMEDALS
+        const uint cm = ChampionMedals::GetCMTime();
+#endif
+#if DEPENDENCY_WARRIORMEDALS
+        const uint wm = WarriorMedals::GetWMTime();
+#endif
         if (false) {}  // here so preprocessors work
 #if DEPENDENCY_CHAMPIONMEDALS
-        else if (theoreticalTime <= ChampionMedals::GetCMTime())  // not necessarily lower than WM
+        else if (theoreticalTime <= cm)  // not necessarily lower than WM
             medal = 6;
 #endif
 #if DEPENDENCY_WARRIORMEDALS
-        else if (theoreticalTime <= WarriorMedals::GetWMTime())
+        else if (theoreticalTime <= wm)
             medal = 5;
 #endif
         else if (theoreticalTime <= App.RootMap.TMObjective_AuthorTime)
