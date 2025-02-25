@@ -28,9 +28,9 @@ vec4 GetMedalColor(int medal) {
             return cmFaster
                 ? vec4(WarriorMedals::GetColorVec(), 1.0f)
                 : S_ChampionColor;
-#elif DEPENDENCY_CHAMPIONMEDALS && !DEPENDENCY_WARRIORMEDALS
+#elif DEPENDENCY_CHAMPIONMEDALS
         case 5: return S_ChampionColor;
-#elif !DEPENDENCY_CHAMPIONMEDALS && DEPENDENCY_WARRIORMEDALS
+#elif DEPENDENCY_WARRIORMEDALS
         case 5: return vec4(WarriorMedals::GetColorVec(), 1.0f);
 #endif
         case 4:  return S_AuthorColor;

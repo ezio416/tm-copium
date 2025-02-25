@@ -183,10 +183,10 @@ void Render() {
             medal = 6;
         else if (theoreticalTime <= medal5)
             medal = 5;
-#elif DEPENDENCY_CHAMPIONMEDALS && !DEPENDENCY_WARRIORMEDALS
+#elif DEPENDENCY_CHAMPIONMEDALS
         else if (theoreticalTime <= cm)
             medal = 5;
-#elif !DEPENDENCY_CHAMPIONMEDALS && DEPENDENCY_WARRIORMEDALS
+#elif DEPENDENCY_WARRIORMEDALS
         else if (theoreticalTime <= wm)
             medal = 5;
 #endif
