@@ -1,5 +1,5 @@
 // c 2024-03-05
-// m 2024-07-21
+// m 2025-02-24
 
 dictionary@                 ghostFirstSeenMap  = dictionary();
 int                         highestGhostIdSeen = -1;
@@ -7,8 +7,11 @@ uint                        lastNbGhosts       = 0;
 string                      loginLocal;
 string                      myName;
 const MLFeed::GhostInfo_V2@ pbGhost            = null;
+const string                pluginColor        = "\\$FA0";
+const string                pluginIcon         = Icons::Flag;
+Meta::Plugin@               pluginMeta         = Meta::ExecutingPlugin();
+const string                pluginTitle        = pluginColor + pluginIcon + "\\$G " + pluginMeta.Name;
 dictionary@                 seenGhosts         = dictionary();
-const string                title              = "\\$FA0" + Icons::Flag + "\\$G Better Copium Timer";
 
 void Main() {
     CTrackMania@ App = cast<CTrackMania@>(GetApp());
@@ -22,11 +25,6 @@ void Main() {
 void OnSettingsChanged() {
     if (currentFont != S_Font)
         ChangeFont();
-}
-
-void RenderMenu() {
-    if (UI::MenuItem(title, "", S_Enabled))
-        S_Enabled = !S_Enabled;
 }
 
 void Render() {
@@ -235,4 +233,9 @@ void Render() {
         nvg::Circle(vec2(posX + halfSizeX + S_FontSize, y), radius);
         nvg::Fill();
     }
+}
+
+void RenderMenu() {
+    if (UI::MenuItem(pluginTitle, "", S_Enabled))
+        S_Enabled = !S_Enabled;
 }
