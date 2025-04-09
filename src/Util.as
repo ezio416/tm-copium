@@ -1,17 +1,17 @@
 // c 2024-03-05
-// m 2025-02-25
+// m 2025-04-08
 
 // courtesy of "Auto-hide Opponents" plugin - https://github.com/XertroV/tm-autohide-opponents
-void CacheLocalLogin() {
-    while (true) {
-        sleep(100);
+// void CacheLocalLogin() {
+//     while (true) {
+//         sleep(100);
 
-        loginLocal = GetLocalLogin();
+//         loginLocal = GetLocalLogin();
 
-        if (loginLocal.Length > 10)
-            break;
-    }
-}
+//         if (loginLocal.Length > 10)
+//             break;
+//     }
+// }
 
 vec4 GetMedalColor(int medal) {
 #if DEPENDENCY_CHAMPIONMEDALS && DEPENDENCY_WARRIORMEDALS

@@ -1,10 +1,10 @@
 // c 2024-03-05
-// m 2025-02-25
+// m 2025-04-08
 
 dictionary@                 ghostFirstSeenMap  = dictionary();
 int                         highestGhostIdSeen = -1;
 uint                        lastNbGhosts       = 0;
-string                      loginLocal;
+// string                      loginLocal;
 string                      myName;
 const MLFeed::GhostInfo_V2@ pbGhost            = null;
 const string                pluginColor        = "\\$FA0";
@@ -17,7 +17,7 @@ void Main() {
     CTrackMania@ App = cast<CTrackMania@>(GetApp());
     myName = App.LocalPlayerInfo.Name;
 
-    startnew(CacheLocalLogin);
+    // startnew(CacheLocalLogin);
 
     ChangeFont();
 }
@@ -46,42 +46,33 @@ void Render() {
         || Playground.UIConfigs.Length == 0
         || Playground.UIConfigs[0] is null
     ) {
-        highestGhostIdSeen = -1;
-        lastNbGhosts = 0;
-        @pbGhost = null;
-        seenGhosts.DeleteAll();
+        Reset();
         return;
     }
 
     const CGamePlaygroundUIConfig::EUISequence Sequence = Playground.UIConfigs[0].UISequence;
-    if (true
-        && Sequence != CGamePlaygroundUIConfig::EUISequence::EndRound
-        && Sequence != CGamePlaygroundUIConfig::EUISequence::Finish
-        && Sequence != CGamePlaygroundUIConfig::EUISequence::Playing
-    )
+    const bool playing = Sequence == CGamePlaygroundUIConfig::EUISequence::Playing;
+    const bool end = false
+        || Sequence == CGamePlaygroundUIConfig::EUISequence::EndRound
+        || Sequence == CGamePlaygroundUIConfig::EUISequence::Finish
+    ;
+    if (!end && !playing)
         return;
-
-    if (true
-        && Sequence == CGamePlaygroundUIConfig::EUISequence::Playing
-        && Playground.GameTerminals[0].GUIPlayer is null
-    )
-        return;  // watching replay
-
-    CSmPlayer@ ViewingPlayer = VehicleState::GetViewingPlayer();
-    if (true
-        && ViewingPlayer !is null
-        && ViewingPlayer.ScriptAPI !is null
-        && ViewingPlayer.ScriptAPI.Login != loginLocal
-    )
-        return;  // spectating
 
     const MLFeed::HookRaceStatsEventsBase_V4@ raceData = MLFeed::GetRaceData_V4();
     if (raceData is null)
         return;
 
     const MLFeed::PlayerCpInfo_V4@ cpInfo = raceData.GetPlayer_V4(myName);
-    if (cpInfo is null || !cpInfo.IsLocalPlayer || cpInfo.NbRespawnsRequested == 0)
+    if (false
+        || cpInfo is null
+        || !cpInfo.IsLocalPlayer  // is this possible?
+        || cpInfo.NbRespawnsRequested == 0
+        || cpInfo.spawnStatus != MLFeed::SpawnStatus::Spawned
+    ) {
+        // Reset();
         return;
+    }
 
     const bool finished = cpInfo.cpCount == int(raceData.CPsToFinish);
     const uint theoreticalTime = finished ? cpInfo.LastTheoreticalCpTime : Math::Max(0, cpInfo.TheoreticalRaceTime);
@@ -90,28 +81,50 @@ void Render() {
 
     const MLFeed::SharedGhostDataHook_V2@ ghostData = MLFeed::GetGhostData();
 
+    UI::Text("\\$F8Fghosts: " + ghostData.NbGhosts);
+
+    // do I need to manually load my pb ghost when joining a map?
+    // if (ghostData.NbGhosts == 0) {
+    //     auto mgr = App.Network.ClientManiaAppPlayground.DataFileMgr;
+    //     mgr.repl
+    // }
+
+    // 202504082237 going to bed, but I still need to figure out logic during the first finish of a map after loading
+    // if pbGhost is null when we finish, we should use cpInfo.BestRaceTimes
+    //
+    // debug screen should be fleshed out a bit
+
     if (lastNbGhosts != ghostData.NbGhosts) {
         lastNbGhosts = ghostData.NbGhosts;
         string key;
 
-        for (uint i = 0; i < ghostData.LoadedGhosts.Length; i++) {
-            MLFeed::GhostInfo_V2@ ghost = ghostData.LoadedGhosts[i];
+        // if (pbGhost is null && ghostData.NbGhosts > 0 && ghostData.Ghosts_V2[0].IsLocalPlayer)
+        //     @pbGhost = ghostData.Ghosts_V2[0];  // 202504082242 this is the last thing I commented, untested
 
-            if (int(ghost.IdUint) <= highestGhostIdSeen)
-                continue;
-            highestGhostIdSeen = ghost.IdUint;
+        // else {
+            for (uint i = 0; i < ghostData.Ghosts_V2.Length; i++) {
+                const MLFeed::GhostInfo_V2@ ghost = ghostData.Ghosts_V2[i];
 
-            key = SeenGhostSaveMap(ghost);
-            if (seenGhosts.Exists(key))
-                continue;
-            seenGhosts[key] = true;
+                if (int(ghost.IdUint) <= highestGhostIdSeen)
+                    continue;
+                highestGhostIdSeen = ghost.IdUint;
 
-            if (
-                (pbGhost is null || ghost.Result_Time < pbGhost.Result_Time)
-                && (ghost.Nickname == "Personal best" || ghost.Nickname == myName)
-            )
-                @pbGhost = ghost;
-        }
+                key = SeenGhostSaveMap(ghost);
+                if (seenGhosts.Exists(key))
+                    continue;
+                seenGhosts[key] = true;
+
+                if (true
+                    && (pbGhost is null || ghost.Result_Time < pbGhost.Result_Time)
+                    // && (ghost.Nickname == "Personal best" || ghost.Nickname == myName)
+                    && (ghost.IsPersonalBest || ghost.IsLocalPlayer)
+                    && !end
+                )
+                    @pbGhost = ghost;
+            }
+        // }
+
+        warn("(" + ghostData.NbGhosts + " ghosts) pbGhost: " + (pbGhost !is null ? "valid" : "null"));
     }
 
     uint[] bestCpTimes = {};
@@ -119,7 +132,11 @@ void Render() {
     if (pbGhost !is null)
         bestCpTimes = pbGhost.Checkpoints;
 
-    if (cpInfo.BestRaceTimes.Length == raceData.CPsToFinish && (pbGhost is null || cpInfo.bestTime < pbGhost.Result_Time))
+    if (true
+        && cpInfo.BestRaceTimes.Length == raceData.CPsToFinish
+        && (pbGhost is null || cpInfo.bestTime < pbGhost.Result_Time)
+        && (pbGhost is null || !end)
+    )
         bestCpTimes = cpInfo.BestRaceTimes;
 
     string text = Time::Format(theoreticalTime);
@@ -132,8 +149,8 @@ void Render() {
     int diff = 0;
     string diffText;
 
-    if (bestCpTimes.Length > 0 && cpInfo.cpTimes.Length > 1) {
-        diff = cpInfo.lastCpTime - bestCpTimes[cpInfo.cpTimes.Length - 2] - SumAllButLast(cpInfo.TimeLostToRespawnByCp);
+    if (bestCpTimes.Length > 1 && cpInfo.cpTimes.Length > 1) {
+        diff = cpInfo.lastCpTime - bestCpTimes[cpInfo.cpTimes.Length - 2] - SumAllButLast(cpInfo.TimeLostToRespawnByCp);  // oob
         diffText = TimeFormat(diff);
         if (!S_Thousandths)
             diffText = diffText.SubStr(0, diffText.Length - 1);
@@ -260,9 +277,88 @@ void Render() {
         nvg::Circle(vec2(posX + halfSizeX + S_FontSize, y), radius);
         nvg::Fill();
     }
+
+    if (UI::Begin(pluginTitle + "\\$888 (debug)", S_Debug, UI::WindowFlags::None)) {
+        if (cpInfo is null)
+            UI::Text("\\$F00cpInfo null");
+        else {
+            UI::Text("cpInfo.CurrentLap: "             + tostring(cpInfo.CurrentLap));
+            UI::Text("cpInfo.WebServicesUserId: "      + tostring(cpInfo.WebServicesUserId));
+            UI::Text("cpInfo.Login: "                  + tostring(cpInfo.Login));
+            UI::Text("cpInfo.LoginMwId.Value: "        + tostring(cpInfo.LoginMwId.Value));
+            UI::Text("cpInfo.LoginMwId.GetName(): "    + tostring(cpInfo.LoginMwId.GetName()));
+            UI::Text("cpInfo.NameMwId.Value: "         + tostring(cpInfo.NameMwId.Value));
+            UI::Text("cpInfo.NameMwId.GetName(): "     + tostring(cpInfo.NameMwId.GetName()));
+            UI::Text("cpInfo.RoundPoints: "            + tostring(cpInfo.RoundPoints));
+            UI::Text("cpInfo.Points: "                 + tostring(cpInfo.Points));
+            UI::Text("cpInfo.TeamNum: "                + tostring(cpInfo.TeamNum));
+            UI::Text("cpInfo.IsMVP: "                  + tostring(cpInfo.IsMVP));
+            UI::Text("cpInfo.FirstSeen: "              + tostring(cpInfo.FirstSeen));
+            string str;
+            foreach (uint time : cpInfo.BestLapTimes) str += time + " ";
+            UI::Text("cpInfo.BestLapTimes: "           + str);
+            UI::Text("cpInfo.raceRespawnRank: "        + tostring(cpInfo.raceRespawnRank));
+            str = "";
+            foreach (uint time : cpInfo.BestRaceTimes) str += time + " ";
+            UI::Text("cpInfo.BestRaceTimes: "          + str);
+            UI::Text("cpInfo.IsLocalPlayer: "          + tostring(cpInfo.IsLocalPlayer));
+            UI::Text("cpInfo.StartTime: "              + tostring(cpInfo.StartTime));
+            UI::Text("cpInfo.NbRespawnsRequested: "    + tostring(cpInfo.NbRespawnsRequested));
+            UI::Text("cpInfo.LastRespawnRaceTime: "    + tostring(cpInfo.LastRespawnRaceTime));
+            UI::Text("cpInfo.LastRespawnCheckpoint: "  + tostring(cpInfo.LastRespawnCheckpoint));
+            UI::Text("cpInfo.TimeLostToRespawns: "     + tostring(cpInfo.TimeLostToRespawns));
+            UI::Text("cpInfo.latencyEstimate: "        + tostring(cpInfo.latencyEstimate));
+            UI::Text("cpInfo.lagDataPoints: "          + tostring(cpInfo.lagDataPoints));
+            UI::Text("cpInfo.name: "                   + tostring(cpInfo.name));
+            UI::Text("cpInfo.cpCount: "                + tostring(cpInfo.cpCount));
+            UI::Text("cpInfo.lastCpTime: "             + tostring(cpInfo.lastCpTime));
+            str = "";
+            foreach (uint time : cpInfo.cpTimes) str += time + " ";
+            UI::Text("cpInfo.cpTimes: "                + str);
+            UI::Text("cpInfo.bestTime: "               + tostring(cpInfo.bestTime));
+            UI::Text("cpInfo.spawnStatus: "            + tostring(cpInfo.spawnStatus));
+            UI::Text("cpInfo.spawnIndex: "             + tostring(cpInfo.spawnIndex));
+            UI::Text("cpInfo.taRank: "                 + tostring(cpInfo.taRank));
+            UI::Text("cpInfo.raceRank: "               + tostring(cpInfo.raceRank));
+            UI::Text("cpInfo.KoState: "                + (cpInfo.KoState !is null ? "valid" : "null"));
+            UI::Text("cpInfo.UpdateNonce: "            + tostring(cpInfo.UpdateNonce));
+            UI::Text("cpInfo.RequestsSpectate: "       + tostring(cpInfo.RequestsSpectate));
+            UI::Text("cpInfo.RaceProgression: "        + tostring(cpInfo.RaceProgression));
+            str = "";
+            foreach (int time : cpInfo.RaceProgressionHistory) str += time + " ";
+            UI::Text("cpInfo.RaceProgressionHistory: " + str);
+            UI::Text("cpInfo.SpawnCount: "             + tostring(cpInfo.SpawnCount));
+        }
+
+        UI::Separator();
+
+        if (pbGhost is null)
+            UI::Text("\\$F00pbGhost null");
+        else {
+            string times;
+            foreach (uint time : pbGhost.Checkpoints) times += tostring(time) + " ";
+            UI::Text("pbGhost.Checkpoints: "    + times);
+            UI::Text("pbGhost.IdName: "         + tostring(pbGhost.IdName));
+            UI::Text("pbGhost.IdUint: "         + tostring(pbGhost.IdUint));
+            UI::Text("pbGhost.IsLoaded: "       + tostring(pbGhost.IsLoaded));
+            UI::Text("pbGhost.IsLocalPlayer: "  + tostring(pbGhost.IsLocalPlayer));
+            UI::Text("pbGhost.IsPersonalBest: " + tostring(pbGhost.IsPersonalBest));
+            UI::Text("pbGhost.Nickname: "       + tostring(pbGhost.Nickname));
+            UI::Text("pbGhost.Result_Score: "   + tostring(pbGhost.Result_Score));
+            UI::Text("pbGhost.Result_Time: "    + tostring(pbGhost.Result_Time));
+        }
+    }
+    UI::End();
 }
 
 void RenderMenu() {
     if (UI::MenuItem(pluginTitle, "", S_Enabled))
         S_Enabled = !S_Enabled;
+}
+
+void Reset() {
+    highestGhostIdSeen = -1;
+    lastNbGhosts = 0;
+    @pbGhost = null;
+    seenGhosts.DeleteAll();
 }
