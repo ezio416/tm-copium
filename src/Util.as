@@ -1,21 +1,15 @@
 // c 2024-03-05
-// m 2025-04-08
+// m 2025-04-09
 
-// courtesy of "Auto-hide Opponents" plugin - https://github.com/XertroV/tm-autohide-opponents
-// void CacheLocalLogin() {
-//     while (true) {
-//         sleep(100);
-
-//         loginLocal = GetLocalLogin();
-
-//         if (loginLocal.Length > 10)
-//             break;
-//     }
-// }
+enum TimesSource {
+    RaceData,
+    PbGhost,
+    None
+}
 
 vec4 GetMedalColor(int medal) {
 #if DEPENDENCY_CHAMPIONMEDALS && DEPENDENCY_WARRIORMEDALS
-        const bool cmFaster = ChampionMedals::GetCMTime() <= WarriorMedals::GetWMTime();
+    const bool cmFaster = ChampionMedals::GetCMTime() <= WarriorMedals::GetWMTime();
 #endif
 
     switch (medal) {
@@ -23,11 +17,13 @@ vec4 GetMedalColor(int medal) {
         case 6:
             return cmFaster
                 ? S_ChampionColor
-                : vec4(WarriorMedals::GetColorVec(), 1.0f);
+                : vec4(WarriorMedals::GetColorVec(), 1.0f)
+            ;
         case 5:
             return cmFaster
                 ? vec4(WarriorMedals::GetColorVec(), 1.0f)
-                : S_ChampionColor;
+                : S_ChampionColor
+            ;
 #elif DEPENDENCY_CHAMPIONMEDALS
         case 5: return S_ChampionColor;
 #elif DEPENDENCY_WARRIORMEDALS
@@ -41,14 +37,10 @@ vec4 GetMedalColor(int medal) {
     }
 }
 
-// courtesy of "Buffer Time" plugin - https://github.com/XertroV/tm-cotd-buffer-time
-string SeenGhostSaveMap(const MLFeed::GhostInfo_V2@ ghost) {
-    const string key = ghost.Nickname + (ghost.Checkpoints.Length << 12 ^ ghost.Result_Time);
-
-    if (!ghostFirstSeenMap.Exists(key))
-        ghostFirstSeenMap[key] = GetApp().RootMap.EdChallengeId;
-
-    return key;
+void Reset() {
+    bestCpTimes = {};
+    respawns    = 0;
+    source      = TimesSource::None;
 }
 
 int SumAllButLast(const int[] &in times) {
