@@ -1,14 +1,14 @@
 // c 2024-03-05
-// m 2025-04-09
+// m 2025-04-12
 
-uint[]                      bestCpTimes;
-uint                        lastNbGhosts       = 0;
-const string                pluginColor        = "\\$FA0";
-const string                pluginIcon         = Icons::Flag;
-Meta::Plugin@               pluginMeta         = Meta::ExecutingPlugin();
-const string                pluginTitle        = pluginColor + pluginIcon + "\\$G " + pluginMeta.Name;
-uint                        respawns           = 0;
-TimesSource                 source             = TimesSource::None;
+uint[]        bestCpTimes;
+const string  pluginColor = "\\$FA0";
+const string  pluginIcon  = Icons::Flag;
+Meta::Plugin@ pluginMeta  = Meta::ExecutingPlugin();
+const string  pluginTitle = pluginColor + pluginIcon + "\\$G " + pluginMeta.Name;
+uint          respawns    = 0;
+const float   scale       = UI::GetScale();
+TimesSource   source      = TimesSource::None;
 
 void Main() {
     ChangeFont();
@@ -62,23 +62,15 @@ void Main() {
         ) {
             bestCpTimes = _bestTimes;
             source = TimesSource::RaceData;
-            // continue;
         }
 
         if (false
             or (@ghostData = MLFeed::GetGhostData()) is null
             or ghostData.Ghosts_V2.Length == 0
-            // or lastNbGhosts == ghostData.Ghosts_V2.Length
         )
             continue;
 
-        // lastNbGhosts = ghostData.Ghosts_V2.Length;
-        // warn("new number of ghosts: " + lastNbGhosts);
-        // if (lastNbGhosts == 0)
-        //     continue;
-
         const MLFeed::GhostInfo_V2@ ghost, pbGhost;
-        // for (uint i = lastNbGhosts - 1; i < ghostData.Ghosts_V2.Length; i++) {
         for (uint i = 0; i < ghostData.Ghosts_V2.Length; i++) {
             if (true
                 and (@ghost = ghostData.Ghosts_V2[i]) !is null
@@ -99,11 +91,6 @@ void Main() {
             source = TimesSource::PbGhost;
         }
     }
-}
-
-void OnSettingsChanged() {
-    if (currentFont != S_Font)
-        ChangeFont();
 }
 
 void Render() {
@@ -175,7 +162,7 @@ void Render() {
         diffText = TimeFormat(diff);
         if (!S_Thousandths)
             diffText = diffText.SubStr(0, diffText.Length - 1);
-        text += (S_Font == Font::DroidSansMono ? " " : "  ") + diffText;
+        text += (S_Font == Font::DroidSans_Mono ? " " : "  ") + diffText;
     }
 
     nvg::FontSize(S_FontSize);

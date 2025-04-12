@@ -1,5 +1,5 @@
 // c 2024-03-05
-// m 2025-04-08
+// m 2025-04-12
 
 [Setting category="General" name="Show timer"]
 bool S_Enabled = true;
@@ -19,15 +19,6 @@ float S_X = 0.5f;
 
 [Setting category="Position/Style" name="Position Y" min=0.0f max=1.0f]
 float S_Y = 0.99f;
-
-[Setting category="Position/Style" name="Font style"]
-Font S_Font = Font::DroidSansBold;
-
-[Setting category="Position/Style" name="Font size" min=8 max=72]
-uint S_FontSize = 24;
-
-[Setting category="Position/Style" name="Font color" color]
-vec4 S_FontColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 
 [Setting category="Position/Style" name="Show number of respawns after finish"]
 bool S_Respawns = true;
@@ -93,3 +84,119 @@ vec4 S_SilverColor = vec4(0.537f, 0.604f, 0.604f, 1.0f);
 
 [Setting category="Position/Style" name="Bronze medal" color]
 vec4 S_BronzeColor = vec4(0.604f, 0.4f, 0.259f, 1.0f);
+
+
+[Setting category="Font" hidden]
+Font S_Font = Font::DroidSans_Bold;
+
+[Setting category="Font" hidden]
+string S_CustomFont;
+
+[Setting category="Font" hidden]
+int S_FontSize = 24;
+
+[Setting category="Font" hidden]
+vec4 S_FontColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+
+[SettingsTab name="Font" icon="Font" order=1]
+void SettingsTab_Font() {
+    if (UI::Button("Reset to default")) {
+        Meta::PluginSetting@[]@ settings = pluginMeta.GetSettings();
+        for (uint i = 0; i < settings.Length; i++) {
+            if (settings[i].Category == "Font")
+                settings[i].Reset();
+        }
+
+        ChangeFont();
+    }
+
+    const string userFontFolder = IO::FromDataFolder("Fonts").Replace("\\", "/");
+
+    if (UI::BeginCombo("Style", tostring(S_Font))) {
+        Font f;
+
+        for (int i = 0; i < Font::_Droid_End; i++) {
+            f = Font(i);
+            if (UI::Selectable(tostring(f), S_Font == f)) {
+                S_Font = f;
+                ChangeFont();
+            }
+        }
+
+        UI::Separator();
+
+        for (int i = Font::_Droid_End + 1; i < Font::_Montserrat_End; i++) {
+            f = Font(i);
+            if (UI::Selectable(tostring(f), S_Font == f)) {
+                S_Font = f;
+                ChangeFont();
+            }
+        }
+
+        UI::Separator();
+
+        for (int i = Font::_Montserrat_End + 1; i < Font::_Oswald_End; i++) {
+            f = Font(i);
+            if (UI::Selectable(tostring(f), S_Font == f)) {
+                S_Font = f;
+                ChangeFont();
+            }
+        }
+
+        UI::Separator();
+
+        if (UI::Selectable("Custom", S_Font == Font::Custom)) {
+            S_Font = Font::Custom;
+
+            if (!IO::FolderExists(userFontFolder))
+                IO::CreateFolder(userFontFolder);
+            else
+                ChangeFont();
+        }
+
+        UI::EndCombo();
+    }
+
+    if (S_Font == Font::Custom) {
+        UI::Indent(scale * 30.0f);
+
+        UI::TextWrapped("Font files (\\$0F0.ttf\\$G) go in");
+        UI::SameLine();
+        if (UI::TextLink(userFontFolder))
+            OpenExplorerPath(userFontFolder);
+        if (UI::IsItemHovered()) {
+            UI::BeginTooltip();
+            UI::Text(Icons::ExternalLink + " open in explorer");
+            UI::EndTooltip();
+        }
+
+        string[]@ filenames = IO::IndexFolder(userFontFolder, false);
+        if (filenames.Length == 0) {
+            S_CustomFont = "";
+            UI::TextWrapped("\\$FF0Folder is empty, download some fonts!");
+
+        } else {
+            if (UI::BeginCombo("File", S_CustomFont)) {
+                for (uint i = 0; i < filenames.Length; i++) {
+                    const string name = Path::GetFileName(filenames[i]);
+                    if (name.EndsWith(".ttf") and UI::Selectable(name, S_CustomFont == name)) {
+                        S_CustomFont = name;
+                        ChangeFont();
+                    }
+                }
+
+                UI::EndCombo();
+            }
+        }
+
+        UI::Indent(scale * -30.0f);
+    }
+
+    S_FontSize = UI::SliderInt("Size", S_FontSize, 8, 128);
+    if (S_FontSize < 8)
+        S_FontSize = 8;
+    if (S_FontSize > 128)
+        S_FontSize = 128;
+
+    S_FontColor = UI::InputColor4("Color", S_FontColor);
+}
