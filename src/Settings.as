@@ -1,5 +1,5 @@
 // c 2024-03-05
-// m 2025-04-12
+// m 2025-04-14
 
 [Setting category="General" name="Show timer"]
 bool S_Enabled = true;
@@ -46,6 +46,9 @@ float S_BackgroundYPad = 6.0f;
 
 [Setting category="Position/Style" name="Background corner radius" min=0.0f max=50.0f]
 float S_BackgroundRadius = 20.0f;
+
+[Setting category="Position/Style" name="Show delta"]
+bool S_Delta = true;
 
 [Setting category="Position/Style" name="Positive delta color" description="slower than PB" color]
 vec4 S_PositiveColor = vec4(0.8f, 0.0f, 0.0f, 0.8f);

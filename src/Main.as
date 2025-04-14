@@ -148,13 +148,21 @@ void Render() {
     if (!S_Thousandths)
         text = text.SubStr(0, text.Length - 1);
 
-    if (finished and respawns > 0 and S_Respawns)
+    if (true
+        and S_Respawns
+        and finished
+        and respawns > 0
+    )
         text += " (" + respawns + " respawn" + (respawns == 1 ? "" : "s") + ")";
 
     int diff = 0;
     string diffText;
 
-    if (bestCpTimes.Length > 1 and raceData.LocalPlayer.cpTimes.Length > 1) {
+    if (true
+        and S_Delta
+        and bestCpTimes.Length > 1
+        and raceData.LocalPlayer.cpTimes.Length > 1
+    ) {
         diff = raceData.LocalPlayer.lastCpTime
             - bestCpTimes[raceData.LocalPlayer.cpTimes.Length - 2]
             - SumAllButLast(raceData.LocalPlayer.TimeLostToRespawnByCp)
@@ -242,6 +250,7 @@ void Render() {
     }
 
     if (true
+        and S_Delta
         and S_Background > 0
         and bestCpTimes.Length > 0
         and raceData.LocalPlayer.cpCount > 0
