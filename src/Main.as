@@ -1,5 +1,5 @@
 // c 2024-03-05
-// m 2025-04-12
+// m 2025-04-14
 
 uint[]        bestCpTimes;
 const string  pluginColor = "\\$FA0";
@@ -141,7 +141,7 @@ void Render() {
         ? raceData.LocalPlayer.LastTheoreticalCpTime
         : Math::Max(0, raceData.LocalPlayer.TheoreticalRaceTime)
     ;
-    if (theoreticalTime == 0)
+    if (int(theoreticalTime) <= 0)
         return;
 
     string text = Time::Format(theoreticalTime);
@@ -241,7 +241,11 @@ void Render() {
         nvg::Fill();
     }
 
-    if (S_Background > 0 and bestCpTimes.Length > 0 and raceData.LocalPlayer.cpCount > 0) {
+    if (true
+        and S_Background > 0
+        and bestCpTimes.Length > 0
+        and raceData.LocalPlayer.cpCount > 0
+    ) {
         const float diffBgOffset = S_FontSize * 0.125f;
 
         nvg::FillColor(diff > 0 ? S_PositiveColor : diff == 0 ? S_NeutralColor : S_NegativeColor);
