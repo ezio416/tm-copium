@@ -1,143 +1,176 @@
 // c 2024-03-05
-// m 2025-02-25
+// m 2025-04-14
 
-dictionary@                 ghostFirstSeenMap  = dictionary();
-int                         highestGhostIdSeen = -1;
-uint                        lastNbGhosts       = 0;
-string                      loginLocal;
-string                      myName;
-const MLFeed::GhostInfo_V2@ pbGhost            = null;
-const string                pluginColor        = "\\$FA0";
-const string                pluginIcon         = Icons::Flag;
-Meta::Plugin@               pluginMeta         = Meta::ExecutingPlugin();
-const string                pluginTitle        = pluginColor + pluginIcon + "\\$G " + pluginMeta.Name;
-dictionary@                 seenGhosts         = dictionary();
+uint[]        bestCpTimes;
+const string  pluginColor = "\\$FA0";
+const string  pluginIcon  = Icons::Flag;
+Meta::Plugin@ pluginMeta  = Meta::ExecutingPlugin();
+const string  pluginTitle = pluginColor + pluginIcon + "\\$G " + pluginMeta.Name;
+uint          respawns    = 0;
+const float   scale       = UI::GetScale();
+TimesSource   source      = TimesSource::None;
 
 void Main() {
-    CTrackMania@ App = cast<CTrackMania@>(GetApp());
-    myName = App.LocalPlayerInfo.Name;
-
-    startnew(CacheLocalLogin);
-
     ChangeFont();
-}
 
-void OnSettingsChanged() {
-    if (currentFont != S_Font)
-        ChangeFont();
+    bool endRound, endOrFinish, finish, playing;
+    const MLFeed::HookRaceStatsEventsBase_V4@ raceData;
+    const MLFeed::SharedGhostDataHook_V2@ ghostData;
+    uint[] _bestTimes;
+
+    while (true) {
+        yield();
+
+        if (!S_Enabled) {
+            Reset();
+            continue;
+        }
+
+        CTrackMania@ App = cast<CTrackMania@>(GetApp());
+        CSmArenaClient@ Playground = cast<CSmArenaClient@>(App.CurrentPlayground);
+
+        if (false
+            or App.RootMap is null
+            or Playground is null
+            or Playground.UIConfigs.Length == 0
+            or Playground.UIConfigs[0] is null
+        ) {
+            Reset();
+            continue;
+        }
+
+        const CGamePlaygroundUIConfig::EUISequence seq = Playground.UIConfigs[0].UISequence;
+        endRound    = seq == CGamePlaygroundUIConfig::EUISequence::EndRound;
+        finish      = seq == CGamePlaygroundUIConfig::EUISequence::Finish;
+        endOrFinish = endRound or finish;
+        playing     = seq == CGamePlaygroundUIConfig::EUISequence::Playing;
+        if (!playing)
+            continue;
+
+        if (false
+            or (@raceData = MLFeed::GetRaceData_V4()) is null
+            or raceData.LocalPlayer is null
+        )
+            continue;
+
+        respawns = raceData.LocalPlayer.NbRespawnsRequested;
+        _bestTimes = raceData.LocalPlayer.BestRaceTimes;
+
+        if (true
+            and _bestTimes.Length > 1
+            and (bestCpTimes.Length < 2 or _bestTimes[_bestTimes.Length - 1] < bestCpTimes[bestCpTimes.Length - 1])
+        ) {
+            bestCpTimes = _bestTimes;
+            source = TimesSource::RaceData;
+        }
+
+        if (false
+            or (@ghostData = MLFeed::GetGhostData()) is null
+            or ghostData.Ghosts_V2.Length == 0
+        )
+            continue;
+
+        const MLFeed::GhostInfo_V2@ ghost, pbGhost;
+        for (uint i = 0; i < ghostData.Ghosts_V2.Length; i++) {
+            if (true
+                and (@ghost = ghostData.Ghosts_V2[i]) !is null
+                and (ghost.IsLocalPlayer or ghost.IsPersonalBest)
+                and (pbGhost is null or ghost.Result_Time < pbGhost.Result_Time)
+            )
+                @pbGhost = ghost;
+        }
+
+        if (true
+            and pbGhost !is null
+            and (false
+                or bestCpTimes.Length < 2
+                or uint(pbGhost.Result_Time) < bestCpTimes[bestCpTimes.Length - 1]
+            )
+        ) {
+            bestCpTimes = pbGhost.Checkpoints;
+            source = TimesSource::PbGhost;
+        }
+    }
 }
 
 void Render() {
+    RenderDebug();
+
     if (
         !S_Enabled
-        || (S_HideWithGame && !UI::IsGameUIVisible())
-        || (S_HideWithOP && !UI::IsOverlayShown())
+        or (S_HideWithGame and !UI::IsGameUIVisible())
+        or (S_HideWithOP and !UI::IsOverlayShown())
     )
+        return;
+
+    if (respawns == 0)
         return;
 
     CTrackMania@ App = cast<CTrackMania@>(GetApp());
     CSmArenaClient@ Playground = cast<CSmArenaClient@>(App.CurrentPlayground);
 
     if (false
-        || App.RootMap is null
-        || Playground is null
-        || Playground.GameTerminals.Length == 0
-        || Playground.GameTerminals[0] is null
-        || Playground.UIConfigs.Length == 0
-        || Playground.UIConfigs[0] is null
+        or App.RootMap is null
+        or Playground is null
+        or Playground.GameTerminals.Length == 0
+        or Playground.GameTerminals[0] is null
+        or Playground.UIConfigs.Length == 0
+        or Playground.UIConfigs[0] is null
     ) {
-        highestGhostIdSeen = -1;
-        lastNbGhosts = 0;
-        @pbGhost = null;
-        seenGhosts.DeleteAll();
+        // Reset();
         return;
     }
 
-    const CGamePlaygroundUIConfig::EUISequence Sequence = Playground.UIConfigs[0].UISequence;
-    if (true
-        && Sequence != CGamePlaygroundUIConfig::EUISequence::EndRound
-        && Sequence != CGamePlaygroundUIConfig::EUISequence::Finish
-        && Sequence != CGamePlaygroundUIConfig::EUISequence::Playing
+    const CGamePlaygroundUIConfig::EUISequence seq = Playground.UIConfigs[0].UISequence;
+    const bool endRound    = seq == CGamePlaygroundUIConfig::EUISequence::EndRound;
+    const bool finish      = seq == CGamePlaygroundUIConfig::EUISequence::Finish;
+    const bool endOrFinish = endRound or finish;
+    const bool playing     = seq == CGamePlaygroundUIConfig::EUISequence::Playing;
+    if (!endOrFinish and !playing)
+        return;
+
+    const MLFeed::HookRaceStatsEventsBase_V4@ raceData;
+    if (false
+        or (@raceData = MLFeed::GetRaceData_V4()) is null
+        or raceData.LocalPlayer is null
     )
         return;
 
-    if (true
-        && Sequence == CGamePlaygroundUIConfig::EUISequence::Playing
-        && Playground.GameTerminals[0].GUIPlayer is null
-    )
-        return;  // watching replay
-
-    CSmPlayer@ ViewingPlayer = VehicleState::GetViewingPlayer();
-    if (true
-        && ViewingPlayer !is null
-        && ViewingPlayer.ScriptAPI !is null
-        && ViewingPlayer.ScriptAPI.Login != loginLocal
-    )
-        return;  // spectating
-
-    const MLFeed::HookRaceStatsEventsBase_V4@ raceData = MLFeed::GetRaceData_V4();
-    if (raceData is null)
+    const bool finished = raceData.LocalPlayer.cpCount == int(raceData.CPsToFinish);
+    const uint theoreticalTime = finished
+        ? raceData.LocalPlayer.LastTheoreticalCpTime
+        : Math::Max(0, raceData.LocalPlayer.TheoreticalRaceTime)
+    ;
+    if (int(theoreticalTime) <= 0)
         return;
-
-    const MLFeed::PlayerCpInfo_V4@ cpInfo = raceData.GetPlayer_V4(myName);
-    if (cpInfo is null || !cpInfo.IsLocalPlayer || cpInfo.NbRespawnsRequested == 0)
-        return;
-
-    const bool finished = cpInfo.cpCount == int(raceData.CPsToFinish);
-    const uint theoreticalTime = finished ? cpInfo.LastTheoreticalCpTime : Math::Max(0, cpInfo.TheoreticalRaceTime);
-    if (theoreticalTime == 0)
-        return;
-
-    const MLFeed::SharedGhostDataHook_V2@ ghostData = MLFeed::GetGhostData();
-
-    if (lastNbGhosts != ghostData.NbGhosts) {
-        lastNbGhosts = ghostData.NbGhosts;
-        string key;
-
-        for (uint i = 0; i < ghostData.LoadedGhosts.Length; i++) {
-            MLFeed::GhostInfo_V2@ ghost = ghostData.LoadedGhosts[i];
-
-            if (int(ghost.IdUint) <= highestGhostIdSeen)
-                continue;
-            highestGhostIdSeen = ghost.IdUint;
-
-            key = SeenGhostSaveMap(ghost);
-            if (seenGhosts.Exists(key))
-                continue;
-            seenGhosts[key] = true;
-
-            if (
-                (pbGhost is null || ghost.Result_Time < pbGhost.Result_Time)
-                && (ghost.Nickname == "Personal best" || ghost.Nickname == myName)
-            )
-                @pbGhost = ghost;
-        }
-    }
-
-    uint[] bestCpTimes = {};
-
-    if (pbGhost !is null)
-        bestCpTimes = pbGhost.Checkpoints;
-
-    if (cpInfo.BestRaceTimes.Length == raceData.CPsToFinish && (pbGhost is null || cpInfo.bestTime < pbGhost.Result_Time))
-        bestCpTimes = cpInfo.BestRaceTimes;
 
     string text = Time::Format(theoreticalTime);
     if (!S_Thousandths)
         text = text.SubStr(0, text.Length - 1);
 
-    if (finished && cpInfo.NbRespawnsRequested > 0 && S_Respawns)
-        text += " (" + cpInfo.NbRespawnsRequested + " respawn" + (cpInfo.NbRespawnsRequested == 1 ? "" : "s") + ")";
+    if (true
+        and S_Respawns
+        and finished
+        and respawns > 0
+    )
+        text += " (" + respawns + " respawn" + (respawns == 1 ? "" : "s") + ")";
 
     int diff = 0;
     string diffText;
 
-    if (bestCpTimes.Length > 0 && cpInfo.cpTimes.Length > 1) {
-        diff = cpInfo.lastCpTime - bestCpTimes[cpInfo.cpTimes.Length - 2] - SumAllButLast(cpInfo.TimeLostToRespawnByCp);
+    if (true
+        and S_Delta
+        and bestCpTimes.Length > 1
+        and raceData.LocalPlayer.cpTimes.Length > 1
+    ) {
+        diff = raceData.LocalPlayer.lastCpTime
+            - bestCpTimes[raceData.LocalPlayer.cpTimes.Length - 2]
+            - SumAllButLast(raceData.LocalPlayer.TimeLostToRespawnByCp)
+        ;
         diffText = TimeFormat(diff);
         if (!S_Thousandths)
             diffText = diffText.SubStr(0, diffText.Length - 1);
-        text += (S_Font == Font::DroidSansMono ? " " : "  ") + diffText;
+        text += (S_Font == Font::DroidSans_Mono ? " " : "  ") + diffText;
     }
 
     nvg::FontSize(S_FontSize);
@@ -161,7 +194,7 @@ void Render() {
         const uint wm = WarriorMedals::GetWMTime();
 #endif
 
-#if DEPENDENCY_CHAMPIONMEDALS && DEPENDENCY_WARRIORMEDALS
+#if DEPENDENCY_CHAMPIONMEDALS and DEPENDENCY_WARRIORMEDALS
         uint medal5 = 0, medal6 = 0;
 
         if (cm == 0)
@@ -178,7 +211,7 @@ void Render() {
 #endif
 
         if (false) {}  // here so preprocessors work
-#if DEPENDENCY_CHAMPIONMEDALS && DEPENDENCY_WARRIORMEDALS
+#if DEPENDENCY_CHAMPIONMEDALS and DEPENDENCY_WARRIORMEDALS
         else if (theoreticalTime <= medal6)
             medal = 6;
         else if (theoreticalTime <= medal5)
@@ -207,16 +240,21 @@ void Render() {
         nvg::FillColor(S_BackgroundColor);
         nvg::BeginPath();
         nvg::RoundedRect(
-            posX - halfSizeX - S_BackgroundXPad - (S_Medals && medal > 0 ? S_FontSize + radius : 0.0f),
+            posX - halfSizeX - S_BackgroundXPad - (S_Medals and medal > 0 ? S_FontSize + radius : 0.0f),
             posY - halfSizeY - S_BackgroundYPad - 2.0f,
-            size.x + S_BackgroundXPad * 2.0f + (S_Medals && medal > 0 ? (S_FontSize + radius) * 2.0f : 0.0f),
+            size.x + S_BackgroundXPad * 2.0f + (S_Medals and medal > 0 ? (S_FontSize + radius) * 2.0f : 0.0f),
             size.y + S_BackgroundYPad * 2.0f,
             S_BackgroundRadius
         );
         nvg::Fill();
     }
 
-    if (S_Background > 0 && bestCpTimes.Length > 0 && cpInfo.cpCount > 0) {
+    if (true
+        and S_Delta
+        and S_Background > 0
+        and bestCpTimes.Length > 0
+        and raceData.LocalPlayer.cpCount > 0
+    ) {
         const float diffBgOffset = S_FontSize * 0.125f;
 
         nvg::FillColor(diff > 0 ? S_PositiveColor : diff == 0 ? S_NeutralColor : S_NegativeColor);
@@ -239,7 +277,7 @@ void Render() {
     nvg::FillColor(S_FontColor);
     nvg::Text(posX, posY, text);
 
-    if (S_Medals && medal > 0) {
+    if (S_Medals and medal > 0) {
         const float y = posY + 1.0f - S_FontSize * 0.1f;
 
         if (S_Drop) {
