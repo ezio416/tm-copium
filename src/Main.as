@@ -56,12 +56,37 @@ void Main() {
         respawns = raceData.LocalPlayer.NbRespawnsRequested;
         _bestTimes = raceData.LocalPlayer.BestRaceTimes;
 
+        /*
+        conditional spaghetti for partial ghosts (map isn't finished yet)
+        should be simplified if possible
+        times should update when either:
+            - # of taken cps is greater than stored
+            - # of taken cps is equal, but the final time is faster
+        doesn't fully work yet
+            - take cp 1 -> give up
+            - take cp 1+2 -> give up
+            - take cp 1+2+3 -> does not update times
+            - reload plugin -> updates times, but why??
+        */
         if (true
-            and _bestTimes.Length > 1
-            and (bestCpTimes.Length < 2 or _bestTimes[_bestTimes.Length - 1] < bestCpTimes[bestCpTimes.Length - 1])
+            and (false
+                or _bestTimes.Length > 1
+                or (true
+                    and _bestTimes.Length > 0
+                    and _bestTimes[0] != 0
+                )
+            )
+            and (false
+                or bestCpTimes.Length < 2
+                or (true
+                    and _bestTimes[_bestTimes.Length - 1] < bestCpTimes[bestCpTimes.Length - 1]
+                    and _bestTimes.Length >= bestCpTimes.Length
+                )
+            )
         ) {
             bestCpTimes = _bestTimes;
             source = TimesSource::RaceData;
+            print("new bestCpTimes (length " + bestCpTimes.Length + ")");  // prints every frame if length == 1 (shouldn't)
         }
 
         if (false
