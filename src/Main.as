@@ -1,5 +1,5 @@
 // c 2024-03-05
-// m 2025-04-14
+// m 2025-05-01
 
 uint[]        bestCpTimes;
 const string  pluginColor = "\\$FA0";
@@ -160,11 +160,11 @@ void Render() {
 
     if (true
         and S_Delta
-        and bestCpTimes.Length > 1
         and raceData.LocalPlayer.cpTimes.Length > 1
+        and bestCpTimes.Length > raceData.LocalPlayer.cpTimes.Length - 2  // check this...
     ) {
         diff = raceData.LocalPlayer.lastCpTime
-            - bestCpTimes[raceData.LocalPlayer.cpTimes.Length - 2]
+            - bestCpTimes[raceData.LocalPlayer.cpTimes.Length - 2]        // ...so this works
             - SumAllButLast(raceData.LocalPlayer.TimeLostToRespawnByCp)
         ;
         diffText = TimeFormat(diff);
