@@ -76,6 +76,7 @@ void Main() {
                 and (@ghost = ghostData.Ghosts_V2[i]) !is null
                 and (ghost.IsLocalPlayer or ghost.IsPersonalBest)
                 and (pbGhost is null or ghost.Result_Time < pbGhost.Result_Time)
+                and (ghost.Checkpoints.Length + 1 == raceData.CpCount)
             )
                 @pbGhost = ghost;
         }
