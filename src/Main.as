@@ -39,10 +39,8 @@ void Main() {
             continue;
         }
 
-        if (Playground.UIConfigs[0].UISequence != CGamePlaygroundUIConfig::EUISequence::Playing)
-            continue;
-
         if (false
+            or Playground.UIConfigs[0].UISequence != CGamePlaygroundUIConfig::EUISequence::Playing
             or (@raceData = MLFeed::GetRaceData_V4()) is null
             or raceData.LocalPlayer is null
         )
