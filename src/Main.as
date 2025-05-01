@@ -13,10 +13,11 @@ TimesSource   source      = TimesSource::None;
 void Main() {
     ChangeFont();
 
-    bool endRound, endOrFinish, finish, playing;
     const MLFeed::HookRaceStatsEventsBase_V4@ raceData;
     const MLFeed::SharedGhostDataHook_V2@ ghostData;
     uint[] _bestTimes;
+
+    auto App = cast<CTrackMania@>(GetApp());
 
     while (true) {
         yield();
@@ -26,7 +27,6 @@ void Main() {
             continue;
         }
 
-        auto App = cast<CTrackMania@>(GetApp());
         auto Playground = cast<CSmArenaClient@>(App.CurrentPlayground);
 
         if (false
@@ -34,18 +34,11 @@ void Main() {
             or Playground is null
             or Playground.UIConfigs.Length == 0
             or Playground.UIConfigs[0] is null
+            or Playground.UIConfigs[0].UISequence != CGamePlaygroundUIConfig::EUISequence::Playing
         ) {
             Reset();
             continue;
         }
-
-        const CGamePlaygroundUIConfig::EUISequence seq = Playground.UIConfigs[0].UISequence;
-        endRound    = seq == CGamePlaygroundUIConfig::EUISequence::EndRound;
-        finish      = seq == CGamePlaygroundUIConfig::EUISequence::Finish;
-        endOrFinish = endRound or finish;
-        playing     = seq == CGamePlaygroundUIConfig::EUISequence::Playing;
-        if (!playing)
-            continue;
 
         if (false
             or (@raceData = MLFeed::GetRaceData_V4()) is null
