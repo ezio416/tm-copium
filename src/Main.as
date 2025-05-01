@@ -254,6 +254,7 @@ void Render() {
         and S_Background > 0
         and bestCpTimes.Length > 0
         and raceData.LocalPlayer.cpCount > 0
+        and raceData.LocalPlayer.cpCount <= int(bestCpTimes.Length)
     ) {
         const float diffBgOffset = S_FontSize * 0.125f;
 
