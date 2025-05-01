@@ -34,11 +34,13 @@ void Main() {
             or Playground is null
             or Playground.UIConfigs.Length == 0
             or Playground.UIConfigs[0] is null
-            or Playground.UIConfigs[0].UISequence != CGamePlaygroundUIConfig::EUISequence::Playing
         ) {
             Reset();
             continue;
         }
+
+        if (Playground.UIConfigs[0].UISequence != CGamePlaygroundUIConfig::EUISequence::Playing)
+            continue;
 
         if (false
             or (@raceData = MLFeed::GetRaceData_V4()) is null
