@@ -26,8 +26,8 @@ void Main() {
             continue;
         }
 
-        CTrackMania@ App = cast<CTrackMania@>(GetApp());
-        CSmArenaClient@ Playground = cast<CSmArenaClient@>(App.CurrentPlayground);
+        auto App = cast<CTrackMania@>(GetApp());
+        auto Playground = cast<CSmArenaClient@>(App.CurrentPlayground);
 
         if (false
             or App.RootMap is null
@@ -106,8 +106,8 @@ void Render() {
     if (respawns == 0)
         return;
 
-    CTrackMania@ App = cast<CTrackMania@>(GetApp());
-    CSmArenaClient@ Playground = cast<CSmArenaClient@>(App.CurrentPlayground);
+    auto App = cast<CTrackMania@>(GetApp());
+    auto Playground = cast<CSmArenaClient@>(App.CurrentPlayground);
 
     if (false
         or App.RootMap is null
@@ -116,18 +116,17 @@ void Render() {
         or Playground.GameTerminals[0] is null
         or Playground.UIConfigs.Length == 0
         or Playground.UIConfigs[0] is null
-    ) {
-        // Reset();
+    )
         return;
-    }
 
-    const CGamePlaygroundUIConfig::EUISequence seq = Playground.UIConfigs[0].UISequence;
-    const bool endRound    = seq == CGamePlaygroundUIConfig::EUISequence::EndRound;
-    const bool finish      = seq == CGamePlaygroundUIConfig::EUISequence::Finish;
-    const bool endOrFinish = endRound or finish;
-    const bool playing     = seq == CGamePlaygroundUIConfig::EUISequence::Playing;
-    if (!endOrFinish and !playing)
-        return;
+    switch (Playground.UIConfigs[0].UISequence) {
+        case CGamePlaygroundUIConfig::EUISequence::EndRound:
+        case CGamePlaygroundUIConfig::EUISequence::Finish:
+        case CGamePlaygroundUIConfig::EUISequence::Playing:
+            break;
+        default:
+            return;
+    }
 
     const MLFeed::HookRaceStatsEventsBase_V4@ raceData;
     if (false
@@ -177,7 +176,7 @@ void Render() {
     nvg::FontFace(font);
     nvg::TextAlign(nvg::Align::Center | nvg::Align::Middle);
 
-    const vec2 size = nvg::TextBounds(text);
+    const vec2 size = nvg::TextBounds(text);  // todo: change this for variable width fonts
     const float diffWidth = nvg::TextBounds(diffText).x;
 
     const float posX = Draw::GetWidth() * S_X;
