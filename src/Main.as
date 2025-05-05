@@ -1,5 +1,5 @@
 // c 2024-03-05
-// m 2025-05-01
+// m 2025-05-05
 
 uint[]        bestCpTimes;
 const string  pluginColor = "\\$FA0";
@@ -17,7 +17,7 @@ void Main() {
     const MLFeed::SharedGhostDataHook_V2@ ghostData;
     uint[] _bestTimes;
 
-    auto App = cast<CTrackMania@>(GetApp());
+    auto App = cast<CTrackMania>(GetApp());
 
     while (true) {
         yield();
@@ -27,7 +27,7 @@ void Main() {
             continue;
         }
 
-        auto Playground = cast<CSmArenaClient@>(App.CurrentPlayground);
+        auto Playground = cast<CSmArenaClient>(App.CurrentPlayground);
 
         if (false
             or App.RootMap is null
@@ -99,8 +99,8 @@ void Render() {
     if (respawns == 0)
         return;
 
-    auto App = cast<CTrackMania@>(GetApp());
-    auto Playground = cast<CSmArenaClient@>(App.CurrentPlayground);
+    auto App = cast<CTrackMania>(GetApp());
+    auto Playground = cast<CSmArenaClient>(App.CurrentPlayground);
 
     if (false
         or App.RootMap is null
