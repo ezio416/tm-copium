@@ -1,5 +1,5 @@
 // c 2024-03-05
-// m 2025-05-05
+// m 2025-05-06
 
 uint[]        bestCpTimes;
 const string  pluginColor = "\\$FA0";
@@ -68,7 +68,7 @@ void Main() {
                 and (@ghost = ghostData.Ghosts_V2[i]) !is null
                 and (ghost.IsLocalPlayer or ghost.IsPersonalBest)
                 and (pbGhost is null or ghost.Result_Time < pbGhost.Result_Time)
-                and (ghost.Checkpoints.Length + 1 == raceData.CpCount)
+                and ghost.Checkpoints.Length == raceData.CPsToFinish
             )
                 @pbGhost = ghost;
         }
