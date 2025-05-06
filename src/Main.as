@@ -1,5 +1,5 @@
 // c 2024-03-05
-// m 2025-04-14
+// m 2025-05-06
 
 uint[]        bestCpTimes;
 const string  pluginColor = "\\$FA0";
@@ -13,10 +13,11 @@ TimesSource   source      = TimesSource::None;
 void Main() {
     ChangeFont();
 
-    bool endRound, endOrFinish, finish, playing;
     const MLFeed::HookRaceStatsEventsBase_V4@ raceData;
     const MLFeed::SharedGhostDataHook_V2@ ghostData;
     uint[] _bestTimes;
+
+    auto App = cast<CTrackMania>(GetApp());
 
     while (true) {
         yield();
@@ -26,8 +27,7 @@ void Main() {
             continue;
         }
 
-        CTrackMania@ App = cast<CTrackMania@>(GetApp());
-        CSmArenaClient@ Playground = cast<CSmArenaClient@>(App.CurrentPlayground);
+        auto Playground = cast<CSmArenaClient>(App.CurrentPlayground);
 
         if (false
             or App.RootMap is null
@@ -39,15 +39,8 @@ void Main() {
             continue;
         }
 
-        const CGamePlaygroundUIConfig::EUISequence seq = Playground.UIConfigs[0].UISequence;
-        endRound    = seq == CGamePlaygroundUIConfig::EUISequence::EndRound;
-        finish      = seq == CGamePlaygroundUIConfig::EUISequence::Finish;
-        endOrFinish = endRound or finish;
-        playing     = seq == CGamePlaygroundUIConfig::EUISequence::Playing;
-        if (!playing)
-            continue;
-
         if (false
+            or Playground.UIConfigs[0].UISequence != CGamePlaygroundUIConfig::EUISequence::Playing
             or (@raceData = MLFeed::GetRaceData_V4()) is null
             or raceData.LocalPlayer is null
         )
@@ -55,11 +48,10 @@ void Main() {
 
         respawns = raceData.LocalPlayer.NbRespawnsRequested;
         _bestTimes = raceData.LocalPlayer.BestRaceTimes;
+        if (_bestTimes.Length > 0 and _bestTimes[0] == 0)
+            _bestTimes.RemoveAt(0);
 
-        if (true
-            and _bestTimes.Length > 1
-            and (bestCpTimes.Length < 2 or _bestTimes[_bestTimes.Length - 1] < bestCpTimes[bestCpTimes.Length - 1])
-        ) {
+        if (ShouldUpdateBestTimes(_bestTimes)) {
             bestCpTimes = _bestTimes;
             source = TimesSource::RaceData;
         }
@@ -76,6 +68,7 @@ void Main() {
                 and (@ghost = ghostData.Ghosts_V2[i]) !is null
                 and (ghost.IsLocalPlayer or ghost.IsPersonalBest)
                 and (pbGhost is null or ghost.Result_Time < pbGhost.Result_Time)
+                and ghost.Checkpoints.Length == raceData.CPsToFinish
             )
                 @pbGhost = ghost;
         }
@@ -106,8 +99,8 @@ void Render() {
     if (respawns == 0)
         return;
 
-    CTrackMania@ App = cast<CTrackMania@>(GetApp());
-    CSmArenaClient@ Playground = cast<CSmArenaClient@>(App.CurrentPlayground);
+    auto App = cast<CTrackMania>(GetApp());
+    auto Playground = cast<CSmArenaClient>(App.CurrentPlayground);
 
     if (false
         or App.RootMap is null
@@ -116,18 +109,17 @@ void Render() {
         or Playground.GameTerminals[0] is null
         or Playground.UIConfigs.Length == 0
         or Playground.UIConfigs[0] is null
-    ) {
-        // Reset();
+    )
         return;
-    }
 
-    const CGamePlaygroundUIConfig::EUISequence seq = Playground.UIConfigs[0].UISequence;
-    const bool endRound    = seq == CGamePlaygroundUIConfig::EUISequence::EndRound;
-    const bool finish      = seq == CGamePlaygroundUIConfig::EUISequence::Finish;
-    const bool endOrFinish = endRound or finish;
-    const bool playing     = seq == CGamePlaygroundUIConfig::EUISequence::Playing;
-    if (!endOrFinish and !playing)
-        return;
+    switch (Playground.UIConfigs[0].UISequence) {
+        case CGamePlaygroundUIConfig::EUISequence::EndRound:
+        case CGamePlaygroundUIConfig::EUISequence::Finish:
+        case CGamePlaygroundUIConfig::EUISequence::Playing:
+            break;
+        default:
+            return;
+    }
 
     const MLFeed::HookRaceStatsEventsBase_V4@ raceData;
     if (false
@@ -160,11 +152,11 @@ void Render() {
 
     if (true
         and S_Delta
-        and bestCpTimes.Length > 1
         and raceData.LocalPlayer.cpTimes.Length > 1
+        and bestCpTimes.Length > raceData.LocalPlayer.cpTimes.Length - 2  // check this...
     ) {
         diff = raceData.LocalPlayer.lastCpTime
-            - bestCpTimes[raceData.LocalPlayer.cpTimes.Length - 2]
+            - bestCpTimes[raceData.LocalPlayer.cpTimes.Length - 2]        // ...so this works
             - SumAllButLast(raceData.LocalPlayer.TimeLostToRespawnByCp)
         ;
         diffText = TimeFormat(diff);
@@ -177,7 +169,7 @@ void Render() {
     nvg::FontFace(font);
     nvg::TextAlign(nvg::Align::Center | nvg::Align::Middle);
 
-    const vec2 size = nvg::TextBounds(text);
+    const vec2 size = nvg::TextBounds(text);  // todo: change this for variable width fonts
     const float diffWidth = nvg::TextBounds(diffText).x;
 
     const float posX = Draw::GetWidth() * S_X;
@@ -254,6 +246,7 @@ void Render() {
         and S_Background > 0
         and bestCpTimes.Length > 0
         and raceData.LocalPlayer.cpCount > 0
+        and raceData.LocalPlayer.cpCount <= int(bestCpTimes.Length)
     ) {
         const float diffBgOffset = S_FontSize * 0.125f;
 
