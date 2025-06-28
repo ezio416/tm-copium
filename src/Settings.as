@@ -13,6 +13,9 @@ bool S_HideWithOP = false;
 [Setting category="General" name="Show debug window"]
 bool S_Debug = false;
 
+[Setting category="General" name="Keep timer after reset [ms]"]
+int S_KeepAfterReset = 1500; // 1500ms spawn time
+
 
 [Setting category="Position/Style" name="Position X" min=0.0f max=1.0f]
 float S_X = 0.5f;

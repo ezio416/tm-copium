@@ -9,6 +9,10 @@ const string  pluginTitle = pluginColor + pluginIcon + "\\$G " + pluginMeta.Name
 uint          respawns    = 0;
 const float   scale       = UI::GetScale();
 TimesSource   source      = TimesSource::None;
+string        text        = "";
+int           diff        = 0;
+string        diffText    = "";
+int           medal       = 0;
 
 void Main() {
     ChangeFont();
@@ -95,7 +99,7 @@ void Main() {
 void Render() {
     RenderDebug();
 
-    // Don't render is Show Timer is diabled, or if it should be hidden with game or OP
+    // Don't render is Show Timer is diabled, or if it should be hidden with the UI or OP
     if (
         !S_Enabled
         or (S_HideWithGame and !UI::IsGameUIVisible())
@@ -103,9 +107,28 @@ void Render() {
     )
         return;
 
+    const MLFeed::HookRaceStatsEventsBase_V4@ raceData;
+
+    // Don't show if there is no data for the player
+    if (false
+        or (@raceData = MLFeed::GetRaceData_V4()) is null
+        or raceData.LocalPlayer is null
+    )
+        return;
+
     // Don't render if there have not been any respwans
     if (respawns == 0)
+    {
+        // Keep rendering the previous result
+        if (true
+            and S_KeepAfterReset - raceData.LocalPlayer.CurrentRaceTime - 1500 > 0 // 1.5s spawn time
+            and raceData.LocalPlayer.cpCount <= 0 // hide if player reaches CP1 on next round
+        )
+            RenderTextAndMedal();
+        else
+            ResetSavedCopium();
         return;
+    }
 
     auto App = cast<CTrackMania>(GetApp());
     auto Playground = cast<CSmArenaClient>(App.CurrentPlayground);
@@ -131,15 +154,6 @@ void Render() {
             return;
     }
 
-    const MLFeed::HookRaceStatsEventsBase_V4@ raceData;
-
-    // Don't show if there is no data for the player
-    if (false
-        or (@raceData = MLFeed::GetRaceData_V4()) is null
-        or raceData.LocalPlayer is null
-    )
-        return;
-
     // Player finished a run
     const bool finished = raceData.LocalPlayer.cpCount == int(raceData.CPsToFinish);
     // Theoretical time to the last CP or fin
@@ -153,7 +167,8 @@ void Render() {
         return;
 
     // Format the theoretical time to a string
-    string text = Time::Format(theoreticalTime);
+    // string text = Time::Format(theoreticalTime);
+    text = Time::Format(theoreticalTime);
 
     // Remove the inaccurate thousandth if configured
     if (!S_Thousandths)
@@ -167,8 +182,8 @@ void Render() {
     )
         text += " (" + respawns + " respawn" + (respawns == 1 ? "" : "s") + ")";
 
-    int diff = 0;
-    string diffText;
+    // int diff = 0;
+    // string diffText;
 
     // Render delta if configured.
     // TODO: explain how this works
@@ -187,19 +202,7 @@ void Render() {
         text += (S_Font == Font::DroidSans_Mono ? " " : "  ") + diffText;
     }
 
-    // Configure font and text position
-    nvg::FontSize(S_FontSize);
-    nvg::FontFace(font);
-    nvg::TextAlign(nvg::Align::Center | nvg::Align::Middle);
-
-    const vec2 size = nvg::TextBounds(text);  // TODO: change this for variable width fonts
-    const float diffWidth = nvg::TextBounds(diffText).x;
-
-    const float posX = Draw::GetWidth() * S_X;
-    const float posY = Draw::GetHeight() * S_Y;
-    const float radius = S_FontSize * 0.4f;
-
-    int medal = 0;
+    // int medal = 0;
 
     // If the player finished, determine the achieved medal. Supports CM and WM
     if (finished) {
@@ -251,77 +254,7 @@ void Render() {
     }
     // Best medal index determined
 
-    const float halfSizeX = size.x * 0.5f;
-    const float halfSizeY = size.y * 0.5f;
-
-    // Render background if configured
-    if (S_Background == BackgroundOption::BehindEverything) {
-        nvg::FillColor(S_BackgroundColor);
-        nvg::BeginPath();
-        nvg::RoundedRect(
-            posX - halfSizeX - S_BackgroundXPad - (S_Medals and medal > 0 ? S_FontSize + radius : 0.0f),
-            posY - halfSizeY - S_BackgroundYPad - 2.0f,
-            size.x + S_BackgroundXPad * 2.0f + (S_Medals and medal > 0 ? (S_FontSize + radius) * 2.0f : 0.0f),
-            size.y + S_BackgroundYPad * 2.0f,
-            S_BackgroundRadius
-        );
-        nvg::Fill();
-    }
-
-    // Render delta background if configured and delta available
-    if (true
-        and S_Delta
-        and S_Background > 0
-        and bestCpTimes.Length > 0
-        and raceData.LocalPlayer.cpCount > 0
-        and raceData.LocalPlayer.cpCount <= int(bestCpTimes.Length)
-    ) {
-        const float diffBgOffset = S_FontSize * 0.125f;
-
-        nvg::FillColor(diff > 0 ? S_PositiveColor : diff == 0 ? S_NeutralColor : S_NegativeColor);
-        nvg::BeginPath();
-        nvg::RoundedRect(
-            posX + halfSizeX - diffWidth - diffBgOffset,
-            posY - halfSizeY - S_BackgroundYPad - 2.0f,
-            diffWidth + diffBgOffset + S_BackgroundXPad,
-            size.y + S_BackgroundYPad * 2.0f,
-            S_BackgroundRadius
-        );
-        nvg::Fill();
-    }
-
-    // Render drop shadow if configured
-    if (S_Drop) {
-        nvg::FillColor(S_DropColor);
-        nvg::Text(posX + S_DropOffset, posY + S_DropOffset, text);
-    }
-
-    // Render the main text (prepared earlier)
-    nvg::FillColor(S_FontColor);
-    nvg::Text(posX, posY, text);
-
-    // Render medal if configured and obtained
-    if (S_Medals and medal > 0) {
-        const float y = posY + 1.0f - S_FontSize * 0.1f;
-
-        if (S_Drop) {
-            nvg::FillColor(S_DropColor);
-            nvg::BeginPath();
-            nvg::Circle(vec2(posX - halfSizeX - S_FontSize + S_DropOffset, y + S_DropOffset), radius);
-            nvg::Fill();
-            nvg::BeginPath();
-            nvg::Circle(vec2(posX + halfSizeX + S_FontSize + S_DropOffset, y + S_DropOffset), radius);
-            nvg::Fill();
-        }
-
-        nvg::BeginPath();
-        nvg::FillColor(GetMedalColor(medal));
-        nvg::Circle(vec2(posX - halfSizeX - S_FontSize, y), radius);
-        nvg::Fill();
-        nvg::BeginPath();
-        nvg::Circle(vec2(posX + halfSizeX + S_FontSize, y), radius);
-        nvg::Fill();
-    }
+    RenderTextAndMedal();
 }
 
 void RenderMenu() {
