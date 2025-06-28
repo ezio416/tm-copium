@@ -1,12 +1,14 @@
 // c 2024-03-05
 // m 2025-05-01
 
+// Indicated the source of the times
 enum TimesSource {
     RaceData,
     PbGhost,
     None
 }
 
+// Return the color for the achieved medal index
 vec4 GetMedalColor(int medal) {
 #if DEPENDENCY_CHAMPIONMEDALS && DEPENDENCY_WARRIORMEDALS
     const bool cmFaster = ChampionMedals::GetCMTime() <= WarriorMedals::GetWMTime();
@@ -43,6 +45,7 @@ void Reset() {
     source      = TimesSource::None;
 }
 
+// Returns if the stored best CP times should be updated based on the new times
 bool ShouldUpdateBestTimes(const uint[] &in new) {
     if (new.Length == 0 or new.Length < bestCpTimes.Length)
         return false;

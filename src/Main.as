@@ -19,16 +19,20 @@ void Main() {
 
     auto App = cast<CTrackMania>(GetApp());
 
+    // Continues loop to update bestCpTimes to the best availabe time (Current run or PB Ghost)
     while (true) {
         yield();
 
+        // Don't show if Show Timer is disabled
+        // TODO: Remove this? Don't show != don't calculate
         if (!S_Enabled) {
-            Reset();
+            Reset(); // TODO: This makes showing after a run not work
             continue;
         }
 
         auto Playground = cast<CSmArenaClient>(App.CurrentPlayground);
 
+        // Reset and Don't show if not palying
         if (false
             or App.RootMap is null
             or Playground is null
@@ -39,6 +43,7 @@ void Main() {
             continue;
         }
 
+        // Don't show if not playing, or there is no raceData
         if (false
             or Playground.UIConfigs[0].UISequence != CGamePlaygroundUIConfig::EUISequence::Playing
             or (@raceData = MLFeed::GetRaceData_V4()) is null
@@ -46,22 +51,29 @@ void Main() {
         )
             continue;
 
-        respawns = raceData.LocalPlayer.NbRespawnsRequested;
-        _bestTimes = raceData.LocalPlayer.BestRaceTimes;
-        if (_bestTimes.Length > 0 and _bestTimes[0] == 0)
-            _bestTimes.RemoveAt(0);
-
-        if (ShouldUpdateBestTimes(_bestTimes)) {
-            bestCpTimes = _bestTimes;
-            source = TimesSource::RaceData;
-        }
-
+        // If there is no (PB) Ghost, there is nothing to calculate
         if (false
             or (@ghostData = MLFeed::GetGhostData()) is null
             or ghostData.Ghosts_V2.Length == 0
         )
             continue;
 
+        // Number of the times the player respawned
+        respawns = raceData.LocalPlayer.NbRespawnsRequested;
+        // CP times for player's best performance this session
+        _bestTimes = raceData.LocalPlayer.BestRaceTimes;
+
+        // Remove the first element if 0
+        if (_bestTimes.Length > 0 and _bestTimes[0] == 0)
+            _bestTimes.RemoveAt(0);
+
+        // Update stored best CP times if needed.
+        if (ShouldUpdateBestTimes(_bestTimes)) {
+            bestCpTimes = _bestTimes;
+            source = TimesSource::RaceData;
+        }
+
+        // Find the PB Ghost
         const MLFeed::GhostInfo_V2@ ghost, pbGhost;
         for (uint i = 0; i < ghostData.Ghosts_V2.Length; i++) {
             if (true
@@ -73,10 +85,11 @@ void Main() {
                 @pbGhost = ghost;
         }
 
+        // If the PB Ghost is found and is faster than the currect run, update bestCpTimes
         if (true
             and pbGhost !is null
             and (false
-                or bestCpTimes.Length < 2
+                or bestCpTimes.Length < 2 // bestCPTimes only has 1st CP
                 or uint(pbGhost.Result_Time) < bestCpTimes[bestCpTimes.Length - 1]
             )
         ) {
@@ -89,6 +102,7 @@ void Main() {
 void Render() {
     RenderDebug();
 
+    // Don't render is Show Timer is diabled, or if it should be hidden with game or OP
     if (
         !S_Enabled
         or (S_HideWithGame and !UI::IsGameUIVisible())
@@ -96,12 +110,14 @@ void Render() {
     )
         return;
 
+    // Don't render if there have not been any respwans
     if (respawns == 0)
         return;
 
     auto App = cast<CTrackMania>(GetApp());
     auto Playground = cast<CSmArenaClient>(App.CurrentPlayground);
 
+    // Don't show if not playing
     if (false
         or App.RootMap is null
         or Playground is null
@@ -112,6 +128,7 @@ void Render() {
     )
         return;
 
+    // Don't show if the player is not playing or finished a run
     switch (Playground.UIConfigs[0].UISequence) {
         case CGamePlaygroundUIConfig::EUISequence::EndRound:
         case CGamePlaygroundUIConfig::EUISequence::Finish:
@@ -122,24 +139,34 @@ void Render() {
     }
 
     const MLFeed::HookRaceStatsEventsBase_V4@ raceData;
+
+    // Don't show if there is no data for the player
     if (false
         or (@raceData = MLFeed::GetRaceData_V4()) is null
         or raceData.LocalPlayer is null
     )
         return;
 
+    // Player finished a run
     const bool finished = raceData.LocalPlayer.cpCount == int(raceData.CPsToFinish);
+    // Theoretical time to the last CP or fin
     const uint theoreticalTime = finished
         ? raceData.LocalPlayer.LastTheoreticalCpTime
         : Math::Max(0, raceData.LocalPlayer.TheoreticalRaceTime)
     ;
+
+    // Don't show if, somehow, the player is doing time travelling
     if (int(theoreticalTime) <= 0)
         return;
 
+    // Format the theoretical time to a string
     string text = Time::Format(theoreticalTime);
+
+    // Remove the inaccurate thousandth if configured
     if (!S_Thousandths)
         text = text.SubStr(0, text.Length - 1);
 
+    // Render number of respawns of finish if configured
     if (true
         and S_Respawns
         and finished
@@ -150,6 +177,8 @@ void Render() {
     int diff = 0;
     string diffText;
 
+    // Render delta if configured.
+    // TODO: explain how this works
     if (true
         and S_Delta
         and raceData.LocalPlayer.cpTimes.Length > 1
@@ -165,11 +194,12 @@ void Render() {
         text += (S_Font == Font::DroidSans_Mono ? " " : "  ") + diffText;
     }
 
+    // Configure font and text position
     nvg::FontSize(S_FontSize);
     nvg::FontFace(font);
     nvg::TextAlign(nvg::Align::Center | nvg::Align::Middle);
 
-    const vec2 size = nvg::TextBounds(text);  // todo: change this for variable width fonts
+    const vec2 size = nvg::TextBounds(text);  // TODO: change this for variable width fonts
     const float diffWidth = nvg::TextBounds(diffText).x;
 
     const float posX = Draw::GetWidth() * S_X;
@@ -178,6 +208,7 @@ void Render() {
 
     int medal = 0;
 
+    // If the player finished, determine the achieved medal. Supports CM and WM
     if (finished) {
 #if DEPENDENCY_CHAMPIONMEDALS
         const uint cm = ChampionMedals::GetCMTime();
@@ -189,6 +220,7 @@ void Render() {
 #if DEPENDENCY_CHAMPIONMEDALS and DEPENDENCY_WARRIORMEDALS
         uint medal5 = 0, medal6 = 0;
 
+        // Set correct medal time order. This only order time
         if (cm == 0)
             medal5 = wm;
         else if (wm == 0)
@@ -201,7 +233,7 @@ void Render() {
             medal6 = wm;
         }
 #endif
-
+        // Determine the achieved medal time
         if (false) {}  // here so preprocessors work
 #if DEPENDENCY_CHAMPIONMEDALS and DEPENDENCY_WARRIORMEDALS
         else if (theoreticalTime <= medal6)
@@ -224,10 +256,12 @@ void Render() {
         else if (theoreticalTime <= App.RootMap.TMObjective_BronzeTime)
             medal = 1;
     }
+    // Best medal index determined
 
     const float halfSizeX = size.x * 0.5f;
     const float halfSizeY = size.y * 0.5f;
 
+    // Render background if configured
     if (S_Background == BackgroundOption::BehindEverything) {
         nvg::FillColor(S_BackgroundColor);
         nvg::BeginPath();
@@ -241,6 +275,7 @@ void Render() {
         nvg::Fill();
     }
 
+    // Render delta background if configured and delta available
     if (true
         and S_Delta
         and S_Background > 0
@@ -262,14 +297,17 @@ void Render() {
         nvg::Fill();
     }
 
+    // Render drop shadow if configured
     if (S_Drop) {
         nvg::FillColor(S_DropColor);
         nvg::Text(posX + S_DropOffset, posY + S_DropOffset, text);
     }
 
+    // Render the main text (prepared earlier)
     nvg::FillColor(S_FontColor);
     nvg::Text(posX, posY, text);
 
+    // Render medal if configured and obtained
     if (S_Medals and medal > 0) {
         const float y = posY + 1.0f - S_FontSize * 0.1f;
 
@@ -294,6 +332,7 @@ void Render() {
 }
 
 void RenderMenu() {
+    // Render a menu item
     if (UI::MenuItem(pluginTitle, "", S_Enabled))
         S_Enabled = !S_Enabled;
 }
