@@ -213,7 +213,7 @@ void Render() {
         const uint wm = WarriorMedals::GetWMTime();
 #endif
 
-#if DEPENDENCY_CHAMPIONMEDALS and DEPENDENCY_WARRIORMEDALS
+#if DEPENDENCY_CHAMPIONMEDALS && DEPENDENCY_WARRIORMEDALS
         uint medal5 = 0, medal6 = 0;
 
         // Set correct medal time order. This only order time
@@ -231,7 +231,7 @@ void Render() {
 #endif
         // Determine the achieved medal time
         if (false) {}  // here so preprocessors work
-#if DEPENDENCY_CHAMPIONMEDALS and DEPENDENCY_WARRIORMEDALS
+#if DEPENDENCY_CHAMPIONMEDALS && DEPENDENCY_WARRIORMEDALS
         else if (theoreticalTime <= medal6)
             medal = 6;
         else if (theoreticalTime <= medal5)
