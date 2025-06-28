@@ -5,8 +5,6 @@ void RenderDebug() {
     if (!S_Debug or GetApp().RootMap is null)
         return;
 
-    auto App = cast<CTrackMania>(GetApp());
-
     if (UI::Begin(pluginTitle + "\\$888 (debug)", S_Debug, UI::WindowFlags::None)) {
         UI::Text("respawns: " + respawns);
         UI::Separator();

@@ -13,6 +13,7 @@ string        text        = "";
 int           diff        = 0;
 string        diffText    = "";
 int           medal       = 0;
+int           cpCount     = 0;
 
 void Main() {
     ChangeFont();
@@ -23,13 +24,13 @@ void Main() {
 
     auto App = cast<CTrackMania>(GetApp());
 
-    // Continues loop to update bestCpTimes to the best availabe time (Current run or PB Ghost)
+    // Continues loop to update bestCpTimes to the best availabe time (Current session or PB Ghost)
     while (true) {
         yield();
 
         auto Playground = cast<CSmArenaClient>(App.CurrentPlayground);
 
-        // Reset and Don't show if not palying
+        // Reset and Don't show if not playing
         if (false
             or App.RootMap is null
             or Playground is null
@@ -120,13 +121,11 @@ void Render() {
     if (respawns == 0)
     {
         // Keep rendering the previous result
-        if (true
-            and S_KeepAfterReset - raceData.LocalPlayer.CurrentRaceTime - 1500 > 0 // 1.5s spawn time
-            and raceData.LocalPlayer.cpCount <= 0 // hide if player reaches CP1 on next round
-        )
-            RenderTextAndMedal();
-        else
-            ResetSavedCopium();
+        if (S_ShowCopiumAfterReset)
+            if(S_ShowCopiumAfterResetTime - raceData.LocalPlayer.CurrentRaceTime - 1500 > 0) // 1500ms spawn time
+                RenderTextAndMedals();
+            else
+                ResetSavedCopium();
         return;
     }
 
@@ -166,95 +165,16 @@ void Render() {
     if (int(theoreticalTime) <= 0)
         return;
 
-    // Format the theoretical time to a string
-    // string text = Time::Format(theoreticalTime);
-    text = Time::Format(theoreticalTime);
+    // if (finished)
+    //     resetTime = Time::get_Now();
 
-    // Remove the inaccurate thousandth if configured
-    if (!S_Thousandths)
-        text = text.SubStr(0, text.Length - 1);
+    cpCount = raceData.LocalPlayer.cpCount;
 
-    // Render number of respawns of finish if configured
-    if (true
-        and S_Respawns
-        and finished
-        and respawns > 0
-    )
-        text += " (" + respawns + " respawn" + (respawns == 1 ? "" : "s") + ")";
+    text = GetText(finished, theoreticalTime, raceData.LocalPlayer);
 
-    // int diff = 0;
-    // string diffText;
+    medal = GetMedal(finished, theoreticalTime);
 
-    // Render delta if configured.
-    // TODO: explain how this works
-    if (true
-        and S_Delta
-        and raceData.LocalPlayer.cpTimes.Length > 1
-        and bestCpTimes.Length > raceData.LocalPlayer.cpTimes.Length - 2  // check this...
-    ) {
-        diff = raceData.LocalPlayer.lastCpTime
-            - bestCpTimes[raceData.LocalPlayer.cpTimes.Length - 2]        // ...so this works
-            - SumAllButLast(raceData.LocalPlayer.TimeLostToRespawnByCp)
-        ;
-        diffText = TimeFormat(diff);
-        if (!S_Thousandths)
-            diffText = diffText.SubStr(0, diffText.Length - 1);
-        text += (S_Font == Font::DroidSans_Mono ? " " : "  ") + diffText;
-    }
-
-    // int medal = 0;
-
-    // If the player finished, determine the achieved medal. Supports CM and WM
-    if (finished) {
-#if DEPENDENCY_CHAMPIONMEDALS
-        const uint cm = ChampionMedals::GetCMTime();
-#endif
-#if DEPENDENCY_WARRIORMEDALS
-        const uint wm = WarriorMedals::GetWMTime();
-#endif
-
-#if DEPENDENCY_CHAMPIONMEDALS && DEPENDENCY_WARRIORMEDALS
-        uint medal5 = 0, medal6 = 0;
-
-        // Set correct medal time order. This only order time
-        if (cm == 0)
-            medal5 = wm;
-        else if (wm == 0)
-            medal5 = cm;
-        else if (cm <= wm) {
-            medal5 = wm;
-            medal6 = cm;
-        } else {
-            medal5 = cm;
-            medal6 = wm;
-        }
-#endif
-        // Determine the achieved medal time
-        if (false) {}  // here so preprocessors work
-#if DEPENDENCY_CHAMPIONMEDALS && DEPENDENCY_WARRIORMEDALS
-        else if (theoreticalTime <= medal6)
-            medal = 6;
-        else if (theoreticalTime <= medal5)
-            medal = 5;
-#elif DEPENDENCY_CHAMPIONMEDALS
-        else if (theoreticalTime <= cm)
-            medal = 5;
-#elif DEPENDENCY_WARRIORMEDALS
-        else if (theoreticalTime <= wm)
-            medal = 5;
-#endif
-        else if (theoreticalTime <= App.RootMap.TMObjective_AuthorTime)
-            medal = 4;
-        else if (theoreticalTime <= App.RootMap.TMObjective_GoldTime)
-            medal = 3;
-        else if (theoreticalTime <= App.RootMap.TMObjective_SilverTime)
-            medal = 2;
-        else if (theoreticalTime <= App.RootMap.TMObjective_BronzeTime)
-            medal = 1;
-    }
-    // Best medal index determined
-
-    RenderTextAndMedal();
+    RenderTextAndMedals();
 }
 
 void RenderMenu() {
