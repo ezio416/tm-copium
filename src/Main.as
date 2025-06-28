@@ -23,13 +23,6 @@ void Main() {
     while (true) {
         yield();
 
-        // Don't show if Show Timer is disabled
-        // TODO: Remove this? Don't show != don't calculate
-        if (!S_Enabled) {
-            Reset(); // TODO: This makes showing after a run not work
-            continue;
-        }
-
         auto Playground = cast<CSmArenaClient>(App.CurrentPlayground);
 
         // Reset and Don't show if not palying
@@ -51,13 +44,6 @@ void Main() {
         )
             continue;
 
-        // If there is no (PB) Ghost, there is nothing to calculate
-        if (false
-            or (@ghostData = MLFeed::GetGhostData()) is null
-            or ghostData.Ghosts_V2.Length == 0
-        )
-            continue;
-
         // Number of the times the player respawned
         respawns = raceData.LocalPlayer.NbRespawnsRequested;
         // CP times for player's best performance this session
@@ -72,6 +58,13 @@ void Main() {
             bestCpTimes = _bestTimes;
             source = TimesSource::RaceData;
         }
+
+        // If there is no (PB) Ghost, there is nothing to compare the current run to
+        if (false
+            or (@ghostData = MLFeed::GetGhostData()) is null
+            or ghostData.Ghosts_V2.Length == 0
+        )
+            continue;
 
         // Find the PB Ghost
         const MLFeed::GhostInfo_V2@ ghost, pbGhost;
