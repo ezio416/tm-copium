@@ -154,7 +154,6 @@ void Render() {
     }
 
     // Player finished a run
-    // const bool finished = raceData.LocalPlayer.cpCount == int(raceData.CPsToFinish);
     const bool finished = raceData.LocalPlayer.IsFinished;
     // Theoretical time to the last CP or fin
     const uint theoreticalTime = finished
