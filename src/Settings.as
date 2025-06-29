@@ -13,6 +13,10 @@ bool S_HideWithOP = false;
 [Setting category="General" name="Show debug window"]
 bool S_Debug = false;
 
+[Setting category="General" name="Show Copium after a reset for a short time"]
+bool S_ShowCopiumAfterReset = true;
+
+int S_ShowCopiumAfterResetTime = 1490; // Could be made configurable, but over 1500ms can get tricky with respawning
 
 [Setting category="Position/Style" name="Position X" min=0.0f max=1.0f]
 float S_X = 0.5f;
@@ -26,13 +30,7 @@ bool S_Respawns = true;
 [Setting category="Position/Style" name="Show thousandths" description="not perfectly accurate"]
 bool S_Thousandths = true;
 
-enum BackgroundOption {
-    None,
-    OnlyBehindDelta,
-    BehindEverything
-}
-
-[Setting category="Position/Style" name="Show background"]
+[Setting category="Position/Style" name="Show background" description="0 = No background; 1 = Only behind Delta; 2 = Behing everything"]
 BackgroundOption S_Background = BackgroundOption::OnlyBehindDelta;
 
 [Setting category="Position/Style" name="Background color" color]
