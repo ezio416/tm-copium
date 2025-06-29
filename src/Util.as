@@ -26,20 +26,28 @@ string GetText(const bool finished, const uint theoreticalTime, const MLFeed::Pl
         text += " (" + respawns + " respawn" + (respawns == 1 ? "" : "s") + ")";
 
     // Calculate difference and update text
-    // TODO: explain how this works
     if (true
-        and S_Delta
-        and localPlayer.cpTimes.Length > 1
-        and bestCpTimes.Length > localPlayer.cpTimes.Length - 2  // check this...
+        and S_Delta                                               // if delta should be displayed
+        and localPlayer.cpTimes.Length > 1                        // if at least 1 CP has been reached
+        and bestCpTimes.Length >= localPlayer.cpTimes.Length - 1  // the bestCPTimes is at least as long as the local player cp times
     ) {
+                // last CP time
         diff = localPlayer.lastCpTime
-            - bestCpTimes[localPlayer.cpTimes.Length - 2]        // ...so this works
+                // minus the best CP time of the same CP (correct for index 0 and length) (e.g. time diff at last CP)
+            - bestCpTimes[localPlayer.cpTimes.Length - 2]
+                // minus all the time diffs at the CPs before the last CP
             - SumAllButLast(localPlayer.TimeLostToRespawnByCp)
         ;
+                // should be the same as the currect race time - theoretical time
+        int diff2 = localPlayer.CurrentRaceTime - theoreticalTime;
         diffText = TimeFormat(diff);
+        string diffText2 = TimeFormat(diff2);
         if (!S_Thousandths)
             diffText = diffText.SubStr(0, diffText.Length - 1);
+        if (!S_Thousandths)
+            diffText2 = diffText2.SubStr(0, diffText2.Length - 1);
         text += (S_Font == Font::DroidSans_Mono ? " " : "  ") + diffText;
+        text += "<" + (S_Font == Font::DroidSans_Mono ? " " : "  ") + diffText + ">";
     }
 
     return text;

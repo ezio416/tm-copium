@@ -154,7 +154,8 @@ void Render() {
     }
 
     // Player finished a run
-    const bool finished = raceData.LocalPlayer.cpCount == int(raceData.CPsToFinish);
+    // const bool finished = raceData.LocalPlayer.cpCount == int(raceData.CPsToFinish);
+    const bool finished = raceData.LocalPlayer.IsFinished;
     // Theoretical time to the last CP or fin
     const uint theoreticalTime = finished
         ? raceData.LocalPlayer.LastTheoreticalCpTime
@@ -165,15 +166,9 @@ void Render() {
     if (int(theoreticalTime) <= 0)
         return;
 
-    // if (finished)
-    //     resetTime = Time::get_Now();
-
     cpCount = raceData.LocalPlayer.cpCount;
-
     text = GetText(finished, theoreticalTime, raceData.LocalPlayer);
-
     medal = GetMedal(finished, theoreticalTime);
-
     RenderTextAndMedals();
 }
 
