@@ -31,7 +31,13 @@ string GetText(const bool finished, const uint theoreticalTime, const MLFeed::Pl
         and localPlayer.cpTimes.Length > 1                        // if at least 1 CP has been reached
         and bestCpTimes.Length >= localPlayer.cpTimes.Length - 1  // the bestCPTimes is at least as long as the local player cp times
     ) {
-        int diff = localPlayer.CurrentRaceTime - theoreticalTime;
+                // last CP time
+        diff = localPlayer.lastCpTime
+                // minus the best CP time of the same CP (correct for index 0 and length) (e.g. time diff at last CP)
+            - bestCpTimes[localPlayer.cpTimes.Length - 2]
+                // minus all the time diffs at the CPs before the last CP
+            - SumAllButLast(localPlayer.TimeLostToRespawnByCp)
+        ;
         diffText = TimeFormat(diff);
         if (!S_Thousandths)
             diffText = diffText.SubStr(0, diffText.Length - 1);

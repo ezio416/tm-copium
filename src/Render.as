@@ -29,6 +29,7 @@ void RenderDelta(const vec2 size, const float posX, const float posY, const floa
         and bestCpTimes.Length > 0
         and cpCount > 0
         and cpCount <= int(bestCpTimes.Length)
+        and diffText != "" // prevents rendering delta (background) after respwan
     ) {
         const float diffBgOffset = S_FontSize * 0.125f;
 

@@ -122,7 +122,9 @@ void Render() {
     {
         // Keep rendering the previous result
         if (S_ShowCopiumAfterReset)
-            if(S_ShowCopiumAfterResetTime - raceData.LocalPlayer.CurrentRaceTime - 1500 > 0) // 1500ms spawn time
+            if (true
+                and S_ShowCopiumAfterResetTime - raceData.LocalPlayer.CurrentRaceTime - 1500 > 0 // 1500ms spawn time
+                and text != "")
                 RenderTextAndMedals();
             else
                 ResetSavedCopium();
