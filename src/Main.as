@@ -1,5 +1,5 @@
 // c 2024-03-05
-// m 2025-05-06
+// m 2025-06-29
 
 uint[]        bestCpTimes;
 const string  pluginColor = "\\$FA0";
@@ -186,7 +186,7 @@ void Render() {
         const uint wm = WarriorMedals::GetWMTime();
 #endif
 
-#if DEPENDENCY_CHAMPIONMEDALS and DEPENDENCY_WARRIORMEDALS
+#if DEPENDENCY_CHAMPIONMEDALS && DEPENDENCY_WARRIORMEDALS
         uint medal5 = 0, medal6 = 0;
 
         if (cm == 0)
@@ -203,7 +203,7 @@ void Render() {
 #endif
 
         if (false) {}  // here so preprocessors work
-#if DEPENDENCY_CHAMPIONMEDALS and DEPENDENCY_WARRIORMEDALS
+#if DEPENDENCY_CHAMPIONMEDALS && DEPENDENCY_WARRIORMEDALS
         else if (theoreticalTime <= medal6)
             medal = 6;
         else if (theoreticalTime <= medal5)
