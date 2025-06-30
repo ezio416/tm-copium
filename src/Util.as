@@ -1,5 +1,5 @@
 // c 2024-03-05
-// m 2025-05-01
+// m 2025-06-30
 
 enum TimesSource {
     RaceData,
@@ -44,11 +44,13 @@ void Reset() {
 }
 
 bool ShouldUpdateBestTimes(const uint[] &in new) {
-    if (new.Length == 0 or new.Length < bestCpTimes.Length)
+    if (new.Length == 0 or new.Length < bestCpTimes.Length) {
         return false;
+    }
 
-    if (bestCpTimes.Length == 0 or bestCpTimes.Length < new.Length)
+    if (bestCpTimes.Length == 0 or bestCpTimes.Length < new.Length) {
         return true;
+    }
 
     // both must now be non-empty and of equal length
     return new[new.Length - 1] < bestCpTimes[bestCpTimes.Length - 1];
@@ -57,8 +59,9 @@ bool ShouldUpdateBestTimes(const uint[] &in new) {
 int SumAllButLast(const int[] &in times) {
     int total = 0;
 
-    for (uint i = 0; i < times.Length - 1; i++)
+    for (uint i = 0; i < times.Length - 1; i++) {
         total += times[i];
+    }
 
     return total;
 }

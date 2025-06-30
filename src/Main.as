@@ -1,5 +1,5 @@
 // c 2024-03-05
-// m 2025-06-29
+// m 2025-06-30
 
 uint[]        bestCpTimes;
 const string  pluginColor = "\\$FA0";
@@ -43,13 +43,15 @@ void Main() {
             or Playground.UIConfigs[0].UISequence != CGamePlaygroundUIConfig::EUISequence::Playing
             or (@raceData = MLFeed::GetRaceData_V4()) is null
             or raceData.LocalPlayer is null
-        )
+        ) {
             continue;
+        }
 
         respawns = raceData.LocalPlayer.NbRespawnsRequested;
         _bestTimes = raceData.LocalPlayer.BestRaceTimes;
-        if (_bestTimes.Length > 0 and _bestTimes[0] == 0)
+        if (_bestTimes.Length > 0 and _bestTimes[0] == 0) {
             _bestTimes.RemoveAt(0);
+        }
 
         if (ShouldUpdateBestTimes(_bestTimes)) {
             bestCpTimes = _bestTimes;
@@ -59,8 +61,9 @@ void Main() {
         if (false
             or (@ghostData = MLFeed::GetGhostData()) is null
             or ghostData.Ghosts_V2.Length == 0
-        )
+        ) {
             continue;
+        }
 
         const MLFeed::GhostInfo_V2@ ghost, pbGhost;
         for (uint i = 0; i < ghostData.Ghosts_V2.Length; i++) {
@@ -69,8 +72,9 @@ void Main() {
                 and (ghost.IsLocalPlayer or ghost.IsPersonalBest)
                 and (pbGhost is null or ghost.Result_Time < pbGhost.Result_Time)
                 and ghost.Checkpoints.Length == raceData.CPsToFinish
-            )
+            ) {
                 @pbGhost = ghost;
+            }
         }
 
         if (true
@@ -89,15 +93,17 @@ void Main() {
 void Render() {
     RenderDebug();
 
-    if (
-        !S_Enabled
+    if (false
+        or !S_Enabled
         or (S_HideWithGame and !UI::IsGameUIVisible())
         or (S_HideWithOP and !UI::IsOverlayShown())
-    )
+    ) {
         return;
+    }
 
-    if (respawns == 0)
+    if (respawns == 0) {
         return;
+    }
 
     auto App = cast<CTrackMania>(GetApp());
     auto Playground = cast<CSmArenaClient>(App.CurrentPlayground);
@@ -109,8 +115,9 @@ void Render() {
         or Playground.GameTerminals[0] is null
         or Playground.UIConfigs.Length == 0
         or Playground.UIConfigs[0] is null
-    )
+    ) {
         return;
+    }
 
     switch (Playground.UIConfigs[0].UISequence) {
         case CGamePlaygroundUIConfig::EUISequence::EndRound:
@@ -125,27 +132,31 @@ void Render() {
     if (false
         or (@raceData = MLFeed::GetRaceData_V4()) is null
         or raceData.LocalPlayer is null
-    )
+    ) {
         return;
+    }
 
     const bool finished = raceData.LocalPlayer.cpCount == int(raceData.CPsToFinish);
     const uint theoreticalTime = finished
         ? raceData.LocalPlayer.LastTheoreticalCpTime
         : Math::Max(0, raceData.LocalPlayer.TheoreticalRaceTime)
     ;
-    if (int(theoreticalTime) <= 0)
+    if (int(theoreticalTime) <= 0) {
         return;
+    }
 
     string text = Time::Format(theoreticalTime);
-    if (!S_Thousandths)
+    if (!S_Thousandths) {
         text = text.SubStr(0, text.Length - 1);
+    }
 
     if (true
         and S_Respawns
         and finished
         and respawns > 0
-    )
+    ) {
         text += " (" + respawns + " respawn" + (respawns == 1 ? "" : "s") + ")";
+    }
 
     int diff = 0;
     string diffText;
@@ -189,11 +200,11 @@ void Render() {
 #if DEPENDENCY_CHAMPIONMEDALS && DEPENDENCY_WARRIORMEDALS
         uint medal5 = 0, medal6 = 0;
 
-        if (cm == 0)
+        if (cm == 0) {
             medal5 = wm;
-        else if (wm == 0)
+        } else if (wm == 0) {
             medal5 = cm;
-        else if (cm <= wm) {
+        } else if (cm <= wm) {
             medal5 = wm;
             medal6 = cm;
         } else {
@@ -202,27 +213,28 @@ void Render() {
         }
 #endif
 
-        if (false) {}  // here so preprocessors work
+        if (false) {  // here so preprocessors work
 #if DEPENDENCY_CHAMPIONMEDALS && DEPENDENCY_WARRIORMEDALS
-        else if (theoreticalTime <= medal6)
+        } else if (theoreticalTime <= medal6) {
             medal = 6;
-        else if (theoreticalTime <= medal5)
+        } else if (theoreticalTime <= medal5) {
             medal = 5;
 #elif DEPENDENCY_CHAMPIONMEDALS
-        else if (theoreticalTime <= cm)
+        } else if (theoreticalTime <= cm) {
             medal = 5;
 #elif DEPENDENCY_WARRIORMEDALS
-        else if (theoreticalTime <= wm)
+        } else if (theoreticalTime <= wm) {
             medal = 5;
 #endif
-        else if (theoreticalTime <= App.RootMap.TMObjective_AuthorTime)
+        } else if (theoreticalTime <= App.RootMap.TMObjective_AuthorTime) {
             medal = 4;
-        else if (theoreticalTime <= App.RootMap.TMObjective_GoldTime)
+        } else if (theoreticalTime <= App.RootMap.TMObjective_GoldTime) {
             medal = 3;
-        else if (theoreticalTime <= App.RootMap.TMObjective_SilverTime)
+        } else if (theoreticalTime <= App.RootMap.TMObjective_SilverTime) {
             medal = 2;
-        else if (theoreticalTime <= App.RootMap.TMObjective_BronzeTime)
+        } else if (theoreticalTime <= App.RootMap.TMObjective_BronzeTime) {
             medal = 1;
+        }
     }
 
     const float halfSizeX = size.x * 0.5f;
@@ -294,6 +306,7 @@ void Render() {
 }
 
 void RenderMenu() {
-    if (UI::MenuItem(pluginTitle, "", S_Enabled))
+    if (UI::MenuItem(pluginTitle, "", S_Enabled)) {
         S_Enabled = !S_Enabled;
+    }
 }

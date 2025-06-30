@@ -1,5 +1,5 @@
 // c 2024-03-05
-// m 2025-04-14
+// m 2025-06-30
 
 [Setting category="General" name="Show timer"]
 bool S_Enabled = true;
@@ -106,8 +106,9 @@ void SettingsTab_Font() {
     if (UI::Button("Reset to default")) {
         Meta::PluginSetting@[]@ settings = pluginMeta.GetSettings();
         for (uint i = 0; i < settings.Length; i++) {
-            if (settings[i].Category == "Font")
+            if (settings[i].Category == "Font") {
                 settings[i].Reset();
+            }
         }
 
         ChangeFont();
@@ -151,10 +152,11 @@ void SettingsTab_Font() {
         if (UI::Selectable("Custom", S_Font == Font::Custom)) {
             S_Font = Font::Custom;
 
-            if (!IO::FolderExists(userFontFolder))
+            if (!IO::FolderExists(userFontFolder)) {
                 IO::CreateFolder(userFontFolder);
-            else
+            } else {
                 ChangeFont();
+            }
         }
 
         UI::EndCombo();
@@ -165,8 +167,9 @@ void SettingsTab_Font() {
 
         UI::TextWrapped("Font files (\\$0F0.ttf\\$G) go in");
         UI::SameLine();
-        if (UI::TextLink(userFontFolder))
+        if (UI::TextLink(userFontFolder)) {
             OpenExplorerPath(userFontFolder);
+        }
         if (UI::IsItemHovered()) {
             UI::BeginTooltip();
             UI::Text(Icons::ExternalLink + " open in explorer");
@@ -196,10 +199,12 @@ void SettingsTab_Font() {
     }
 
     S_FontSize = UI::SliderInt("Size", S_FontSize, 8, 128);
-    if (S_FontSize < 8)
+    if (S_FontSize < 8) {
         S_FontSize = 8;
-    if (S_FontSize > 128)
+    }
+    if (S_FontSize > 128) {
         S_FontSize = 128;
+    }
 
     S_FontColor = UI::InputColor4("Color", S_FontColor);
 }
