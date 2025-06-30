@@ -90,6 +90,16 @@ void Main() {
     }
 }
 
+void OnSettingsChanged() {
+    if (S_PersistTime < 0) {
+        S_PersistTime = 0;
+    }
+
+    if (S_PersistTime > 1490) {
+        S_PersistTime = 1490;
+    }
+}
+
 void Render() {
     RenderDebug();
 
