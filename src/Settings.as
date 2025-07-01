@@ -88,11 +88,8 @@ vec4 S_SilverColor = vec4(0.537f, 0.604f, 0.604f, 1.0f);
 [Setting category="Position/Style" name="Bronze medal" color]
 vec4 S_BronzeColor = vec4(0.604f, 0.4f, 0.259f, 1.0f);
 
-[Setting category="Position/Style" name="Persist timer after restart"]
+[Setting category="Position/Style" name="Persist timer after restart" description="Shows until player is driving again"]
 bool S_Persist = true;
-
-[Setting category="Position/Style" name="Persist time (ms)" min=0 max=1490 if="S_Persist"]
-int S_PersistTime = 1490;
 
 
 [Setting category="Font" hidden]

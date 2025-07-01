@@ -41,6 +41,16 @@ void Reset() {
     bestCpTimes = {};
     respawns    = 0;
     source      = TimesSource::None;
+
+    ResetSaved();
+}
+
+void ResetSaved() {
+    cpCount  = 0;
+    diff     = 0;
+    diffText = "";
+    medal    = 0;
+    text     = "";
 }
 
 bool ShouldUpdateBestTimes(const uint[] &in new) {

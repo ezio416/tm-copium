@@ -10,7 +10,12 @@ void RenderDebug() {
     }
 
     if (UI::Begin(pluginTitle + "\\$888 (debug)", S_Debug, UI::WindowFlags::None)) {
+        UI::Text("cpCount: " + cpCount);
+        UI::Text("diff: " + diff);
+        UI::Text("diffText: " + diffText);
+        UI::Text("medal: " + medal);
         UI::Text("respawns: " + respawns);
+        UI::Text("text: " + text);
         UI::Separator();
 
         UI::Text("bestCpTimes (" + tostring(source) + ")");

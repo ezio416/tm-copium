@@ -2,6 +2,10 @@
 // m 2025-06-30
 
 uint[]        bestCpTimes;
+int           cpCount     = 0;
+int           diff        = 0;
+string        diffText;
+int           medal       = 0;
 const string  pluginColor = "\\$FA0";
 const string  pluginIcon  = Icons::Flag;
 Meta::Plugin@ pluginMeta  = Meta::ExecutingPlugin();
@@ -9,6 +13,7 @@ const string  pluginTitle = pluginColor + pluginIcon + "\\$G " + pluginMeta.Name
 uint          respawns    = 0;
 const float   scale       = UI::GetScale();
 TimesSource   source      = TimesSource::None;
+string        text;
 
 void Main() {
     ChangeFont();
@@ -90,16 +95,6 @@ void Main() {
     }
 }
 
-void OnSettingsChanged() {
-    if (S_PersistTime < 0) {
-        S_PersistTime = 0;
-    }
-
-    if (S_PersistTime > 1490) {
-        S_PersistTime = 1490;
-    }
-}
-
 void Render() {
     RenderDebug();
 
@@ -111,7 +106,26 @@ void Render() {
         return;
     }
 
+    const MLFeed::HookRaceStatsEventsBase_V4@ raceData;
+    if (false
+        or (@raceData = MLFeed::GetRaceData_V4()) is null
+        or raceData.LocalPlayer is null
+    ) {
+        return;
+    }
+
     if (respawns == 0) {
+        if (S_Persist) {
+            if (true
+                and raceData.LocalPlayer.CurrentRaceTime < 0
+                and text.Length > 0
+            ) {
+                RenderTimer();
+            } else {
+                ResetSaved();
+            }
+        }
+
         return;
     }
 
@@ -138,14 +152,6 @@ void Render() {
             return;
     }
 
-    const MLFeed::HookRaceStatsEventsBase_V4@ raceData;
-    if (false
-        or (@raceData = MLFeed::GetRaceData_V4()) is null
-        or raceData.LocalPlayer is null
-    ) {
-        return;
-    }
-
     const bool finished = raceData.LocalPlayer.cpCount == int(raceData.CPsToFinish);
     const uint theoreticalTime = finished
         ? raceData.LocalPlayer.LastTheoreticalCpTime
@@ -155,7 +161,9 @@ void Render() {
         return;
     }
 
-    string text = Time::Format(theoreticalTime);
+    cpCount = raceData.LocalPlayer.cpCount;
+
+    text = Time::Format(theoreticalTime);
     if (!S_Thousandths) {
         text = text.SubStr(0, text.Length - 1);
     }
@@ -168,9 +176,6 @@ void Render() {
         text += " (" + respawns + " respawn" + (respawns == 1 ? "" : "s") + ")";
     }
 
-    int diff = 0;
-    string diffText;
-
     if (true
         and S_Delta
         and raceData.LocalPlayer.cpTimes.Length > 1
@@ -181,23 +186,11 @@ void Render() {
             - SumAllButLast(raceData.LocalPlayer.TimeLostToRespawnByCp)
         ;
         diffText = TimeFormat(diff);
-        if (!S_Thousandths)
+        if (!S_Thousandths) {
             diffText = diffText.SubStr(0, diffText.Length - 1);
+        }
         text += (S_Font == Font::DroidSans_Mono ? " " : "  ") + diffText;
     }
-
-    nvg::FontSize(S_FontSize);
-    nvg::FontFace(font);
-    nvg::TextAlign(nvg::Align::Center | nvg::Align::Middle);
-
-    const vec2 size = nvg::TextBounds(text);  // todo: change this for variable width fonts
-    const float diffWidth = nvg::TextBounds(diffText).x;
-
-    const float posX = Draw::GetWidth() * S_X;
-    const float posY = Draw::GetHeight() * S_Y;
-    const float radius = S_FontSize * 0.4f;
-
-    int medal = 0;
 
     if (finished) {
 #if DEPENDENCY_CHAMPIONMEDALS
@@ -247,6 +240,27 @@ void Render() {
         }
     }
 
+    RenderTimer();
+}
+
+void RenderMenu() {
+    if (UI::MenuItem(pluginTitle, "", S_Enabled)) {
+        S_Enabled = !S_Enabled;
+    }
+}
+
+void RenderTimer() {
+    nvg::FontSize(S_FontSize);
+    nvg::FontFace(font);
+    nvg::TextAlign(nvg::Align::Center | nvg::Align::Middle);
+
+    const vec2 size = nvg::TextBounds(text);  // todo: change this for variable width fonts
+    const float diffWidth = nvg::TextBounds(diffText).x;
+
+    const float posX = Draw::GetWidth() * S_X;
+    const float posY = Draw::GetHeight() * S_Y;
+    const float radius = S_FontSize * 0.4f;
+
     const float halfSizeX = size.x * 0.5f;
     const float halfSizeY = size.y * 0.5f;
 
@@ -267,8 +281,9 @@ void Render() {
         and S_Delta
         and S_Background > 0
         and bestCpTimes.Length > 0
-        and raceData.LocalPlayer.cpCount > 0
-        and raceData.LocalPlayer.cpCount <= int(bestCpTimes.Length)
+        and cpCount > 0
+        and cpCount <= int(bestCpTimes.Length)
+        and diffText.Length > 0
     ) {
         const float diffBgOffset = S_FontSize * 0.125f;
 
@@ -292,7 +307,10 @@ void Render() {
     nvg::FillColor(S_FontColor);
     nvg::Text(posX, posY, text);
 
-    if (S_Medals and medal > 0) {
+    if (true
+        and S_Medals
+        and medal > 0
+    ) {
         const float y = posY + 1.0f - S_FontSize * 0.1f;
 
         if (S_Drop) {
@@ -312,11 +330,5 @@ void Render() {
         nvg::BeginPath();
         nvg::Circle(vec2(posX + halfSizeX + S_FontSize, y), radius);
         nvg::Fill();
-    }
-}
-
-void RenderMenu() {
-    if (UI::MenuItem(pluginTitle, "", S_Enabled)) {
-        S_Enabled = !S_Enabled;
     }
 }
