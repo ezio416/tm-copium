@@ -237,6 +237,8 @@ void Render() {
             medal = 2;
         } else if (theoreticalTime <= App.RootMap.TMObjective_BronzeTime) {
             medal = 1;
+        } else {
+            medal = 0;
         }
     }
 
