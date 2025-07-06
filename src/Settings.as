@@ -1,5 +1,5 @@
 // c 2024-03-05
-// m 2025-06-30
+// m 2025-07-06
 
 [Setting category="General" name="Show timer"]
 bool S_Enabled = true;
@@ -166,7 +166,7 @@ void SettingsTab_Font() {
     }
 
     if (S_Font == Font::Custom) {
-        UI::Indent(scale * 30.0f);
+        UI::Indent(UI::GetScale() * 30.0f);
 
         UI::TextWrapped("Font files (\\$0F0.ttf\\$G) go in");
         UI::SameLine();
@@ -198,7 +198,7 @@ void SettingsTab_Font() {
             }
         }
 
-        UI::Indent(scale * -30.0f);
+        UI::Indent(UI::GetScale() * -30.0f);
     }
 
     S_FontSize = UI::SliderInt("Size", S_FontSize, 8, 128);

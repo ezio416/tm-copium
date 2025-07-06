@@ -13,7 +13,6 @@ const string  pluginIcon      = Icons::Flag;
 Meta::Plugin@ pluginMeta      = Meta::ExecutingPlugin();
 const string  pluginTitle     = pluginColor + pluginIcon + "\\$G " + pluginMeta.Name;
 uint          respawns        = 0;
-const float   scale           = UI::GetScale();
 TimesSource   source          = TimesSource::None;
 string        text;
 
