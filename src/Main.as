@@ -1,5 +1,5 @@
 // c 2024-03-05
-// m 2025-06-30
+// m 2025-07-04
 
 uint[]        bestCpTimes;
 int           cpCount     = 0;
@@ -114,21 +114,6 @@ void Render() {
         return;
     }
 
-    if (respawns == 0) {
-        if (S_Persist) {
-            if (true
-                and raceData.LocalPlayer.CurrentRaceTime < 0
-                and text.Length > 0
-            ) {
-                RenderTimer();
-            } else {
-                ResetSaved();
-            }
-        }
-
-        return;
-    }
-
     auto App = cast<CTrackMania>(GetApp());
     auto Playground = cast<CSmArenaClient>(App.CurrentPlayground);
 
@@ -140,6 +125,29 @@ void Render() {
         or Playground.UIConfigs.Length == 0
         or Playground.UIConfigs[0] is null
     ) {
+        return;
+    }
+
+    if (true
+        and Playground.GameTerminals[0].GUIPlayer !is null
+        and Playground.GameTerminals[0].GUIPlayer !is Playground.GameTerminals[0].ControlledPlayer
+    ) {
+        return;  // viewing someone else
+    }
+
+    if (respawns == 0) {
+        if (S_Persist) {
+            if (true
+                and raceData.LocalPlayer.CurrentRaceTime < 0
+                and text.Length > 0
+                and !raceData.WarmupActive
+            ) {
+                RenderTimer();
+            } else {
+                ResetSaved();
+            }
+        }
+
         return;
     }
 
