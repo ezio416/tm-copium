@@ -1,5 +1,5 @@
 // c 2025-04-09
-// m 2025-06-30
+// m 2025-07-06
 
 void RenderDebug() {
     if (false
@@ -10,8 +10,10 @@ void RenderDebug() {
     }
 
     if (UI::Begin(pluginTitle + "\\$888 (debug)", S_Debug, UI::WindowFlags::None)) {
+        UI::Text("bestSessionTime: " + bestSessionTime);
         UI::Text("cpCount: " + cpCount);
         UI::Text("diff: " + diff);
+        UI::Text("lastTime: " + lastTime);
         UI::Text("diffText: " + diffText);
         UI::Text("medal: " + medal);
         UI::Text("respawns: " + respawns);

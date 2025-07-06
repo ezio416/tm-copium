@@ -1,22 +1,37 @@
 // c 2024-03-05
-// m 2025-07-04
+// m 2025-07-06
 
 uint[]        bestCpTimes;
-int           cpCount     = 0;
-int           diff        = 0;
+uint          bestSessionTime = 0;
+int           cpCount         = 0;
+int           diff            = 0;
 string        diffText;
-int           medal       = 0;
-const string  pluginColor = "\\$FA0";
-const string  pluginIcon  = Icons::Flag;
-Meta::Plugin@ pluginMeta  = Meta::ExecutingPlugin();
-const string  pluginTitle = pluginColor + pluginIcon + "\\$G " + pluginMeta.Name;
-uint          respawns    = 0;
-const float   scale       = UI::GetScale();
-TimesSource   source      = TimesSource::None;
+uint          lastTime        = 0;
+int           medal           = 0;
+const string  pluginColor     = "\\$FA0";
+const string  pluginIcon      = Icons::Flag;
+Meta::Plugin@ pluginMeta      = Meta::ExecutingPlugin();
+const string  pluginTitle     = pluginColor + pluginIcon + "\\$G " + pluginMeta.Name;
+uint          respawns        = 0;
+const float   scale           = UI::GetScale();
+TimesSource   source          = TimesSource::None;
 string        text;
+
+void OnDestroyed() {
+#if DEPENDENCY_ULTIMATEMEDALSEXTENDED
+    UltimateMedalsExtended::RemoveMedal("Last Copium");
+    UltimateMedalsExtended::RemoveMedal("Session Copium");
+#endif
+}
 
 void Main() {
     ChangeFont();
+
+#if DEPENDENCY_ULTIMATEMEDALSEXTENDED
+    trace("registering UME medals");
+    UltimateMedalsExtended::AddMedal(UME_Last());
+    UltimateMedalsExtended::AddMedal(UME_Session());
+#endif
 
     const MLFeed::HookRaceStatsEventsBase_V4@ raceData;
     const MLFeed::SharedGhostDataHook_V2@ ghostData;
@@ -41,6 +56,8 @@ void Main() {
             or Playground.UIConfigs[0] is null
         ) {
             Reset();
+            bestSessionTime = 0;
+            lastTime = 0;
             continue;
         }
 
@@ -167,6 +184,15 @@ void Render() {
     ;
     if (int(theoreticalTime) <= 0) {
         return;
+    }
+
+    if (finished) {
+        bestSessionTime = bestSessionTime == 0
+            ? theoreticalTime
+            : Math::Min(bestSessionTime, theoreticalTime)
+        ;
+
+        lastTime = theoreticalTime;
     }
 
     cpCount = raceData.LocalPlayer.cpCount;
