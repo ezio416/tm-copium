@@ -1,7 +1,9 @@
 // c 2024-03-05
-// m 2025-07-06
+// m 2025-07-07
 
 uint[]        bestCpTimes;
+Json::Value@  bestEver        = Json::Object();
+const string  bestEverFile    = IO::FromStorageFolder("best.json");
 uint          bestSessionTime = 0;
 int           cpCount         = 0;
 int           diff            = 0;
@@ -18,7 +20,8 @@ string        text;
 
 void OnDestroyed() {
 #if DEPENDENCY_ULTIMATEMEDALSEXTENDED
-    UltimateMedalsExtended::RemoveMedal("Last Copium");
+    UltimateMedalsExtended::RemoveMedal("Best Copium");
+    UltimateMedalsExtended::RemoveMedal("Previous Copium");
     UltimateMedalsExtended::RemoveMedal("Session Copium");
 #endif
 }
@@ -28,9 +31,20 @@ void Main() {
 
 #if DEPENDENCY_ULTIMATEMEDALSEXTENDED
     trace("registering UME medals");
-    UltimateMedalsExtended::AddMedal(UME_Last());
+    UltimateMedalsExtended::AddMedal(UME_Best());
+    UltimateMedalsExtended::AddMedal(UME_Previous());
     UltimateMedalsExtended::AddMedal(UME_Session());
 #endif
+
+    if (IO::FileExists(bestEverFile)) {
+        try {
+            @bestEver = Json::FromFile(bestEverFile);
+        } catch {
+            error("error reading best.json! " + getExceptionInfo());
+        }
+    } else {
+        trace("best.json not found, try respawning!");
+    }
 
     const MLFeed::HookRaceStatsEventsBase_V4@ raceData;
     const MLFeed::SharedGhostDataHook_V2@ ghostData;
@@ -148,7 +162,7 @@ void Render() {
         and Playground.GameTerminals[0].GUIPlayer !is null
         and Playground.GameTerminals[0].GUIPlayer !is Playground.GameTerminals[0].ControlledPlayer
     ) {
-        return;  // viewing someone else
+        return;  // spectating
     }
 
     if (respawns == 0) {
@@ -192,6 +206,7 @@ void Render() {
         ;
 
         lastTime = theoreticalTime;
+        SetBestEver(App.RootMap.EdChallengeId, theoreticalTime);
     }
 
     cpCount = raceData.LocalPlayer.cpCount;

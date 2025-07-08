@@ -1,5 +1,5 @@
 // c 2024-03-05
-// m 2025-06-30
+// m 2025-07-07
 
 enum TimesSource {
     RaceData,
@@ -7,7 +7,26 @@ enum TimesSource {
     None
 }
 
-vec4 GetMedalColor(int medal) {
+void DeleteBestEver(const string&in uid) {
+    if (bestEver.HasKey(uid)) {
+        bestEver.Remove(uid);
+        Json::ToFile(bestEverFile, bestEver, true);
+    }
+}
+
+uint GetBestEver(const string&in uid) {
+    if (false
+        or uid.Length == 0
+        or !bestEver.HasKey(uid)
+        or bestEver[uid].GetType() != Json::Type::Number
+    ) {
+        return 0;
+    }
+
+    return uint(bestEver[uid]);
+}
+
+vec4 GetMedalColor(const int medal) {
 #if DEPENDENCY_CHAMPIONMEDALS && DEPENDENCY_WARRIORMEDALS
     const bool cmFaster = ChampionMedals::GetCMTime() <= WarriorMedals::GetWMTime();
 #endif
@@ -53,7 +72,23 @@ void ResetSaved() {
     text     = "";
 }
 
-bool ShouldUpdateBestTimes(const uint[] &in new) {
+void SetBestEver(const string&in uid, const uint time) {
+    const uint best = GetBestEver(uid);
+    if (true
+        and uid.Length > 0
+        and time > 0
+        and (false
+            or best == 0
+            or time < best
+        )
+    ) {
+        trace("new best time: " + Time::Format(time));
+        bestEver[uid] = time;
+        Json::ToFile(bestEverFile, bestEver, true);
+    }
+}
+
+bool ShouldUpdateBestTimes(const uint[]& new) {
     if (new.Length == 0 or new.Length < bestCpTimes.Length) {
         return false;
     }
@@ -66,7 +101,7 @@ bool ShouldUpdateBestTimes(const uint[] &in new) {
     return new[new.Length - 1] < bestCpTimes[bestCpTimes.Length - 1];
 }
 
-int SumAllButLast(const int[] &in times) {
+int SumAllButLast(const int[]& times) {
     int total = 0;
 
     for (uint i = 0; i < times.Length - 1; i++) {

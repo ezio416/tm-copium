@@ -1,5 +1,5 @@
 // c 2025-04-09
-// m 2025-07-06
+// m 2025-07-07
 
 void RenderDebug() {
     if (false
@@ -9,11 +9,28 @@ void RenderDebug() {
         return;
     }
 
+    const string uid = GetApp().RootMap.EdChallengeId;
+
     if (UI::Begin(pluginTitle + "\\$888 (debug)", S_Debug, UI::WindowFlags::None)) {
-        UI::Text("bestSessionTime: " + bestSessionTime);
+        const uint best = GetBestEver(uid);
+        UI::AlignTextToFramePadding();
+        UI::Text("best ever time: " + Time::Format(best));
+        if (best > 0) {
+            UI::SameLine();
+            if (UI::Button(Icons::TrashO)) {
+                DeleteBestEver(uid);
+            }
+            if (UI::IsItemHovered()) {
+                UI::BeginTooltip();
+                UI::Text("\\$DD0" + Icons::ExclamationTriangle + " Are you sure? " + Icons::ExclamationTriangle);
+                UI::EndTooltip();
+            }
+        }
+
+        UI::Text("bestSessionTime: " + Time::Format(bestSessionTime));
         UI::Text("cpCount: " + cpCount);
         UI::Text("diff: " + diff);
-        UI::Text("lastTime: " + lastTime);
+        UI::Text("lastTime: " + Time::Format(lastTime));
         UI::Text("diffText: " + diffText);
         UI::Text("medal: " + medal);
         UI::Text("respawns: " + respawns);
