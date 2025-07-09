@@ -1,5 +1,5 @@
 // c 2023-08-16
-// m 2025-04-12
+// m 2025-06-30
 
 nvg::Font font;
 Font currentFont = S_Font;
@@ -75,8 +75,9 @@ void ChangeFont() {
         case Font::Custom:                      f = nvg::LoadFont(S_CustomFont);                                              break;
     }
 
-    if (f > -1)
+    if (f > -1) {
         font = f;
+    }
 
     currentFont = S_Font;
 }

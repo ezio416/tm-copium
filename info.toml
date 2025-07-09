@@ -2,9 +2,9 @@
 name = "Copium"
 author = "Ezio"
 category = "Race"
-version = "1.2.1"
+version = "1.3.0"
 siteid = 500
 
 [script]
 dependencies = [ "VehicleState", "MLFeedRaceData" ]
-optional_dependencies = [ "ChampionMedals", "WarriorMedals" ]
+optional_dependencies = [ "ChampionMedals", "UltimateMedalsExtended", "WarriorMedals" ]
