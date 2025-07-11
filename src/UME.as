@@ -1,20 +1,20 @@
 // c 2025-07-06
-// m 2025-07-07
+// m 2025-07-10
 
 #if DEPENDENCY_ULTIMATEMEDALSEXTENDED
+
+UltimateMedalsExtended::Config@ configBest = UltimateMedalsExtended::Config();
 
 class UME_Best : UltimateMedalsExtended::IMedal {
     string uid;
 
     UltimateMedalsExtended::Config GetConfig() override {
-        UltimateMedalsExtended::Config config;
+        configBest.defaultName = "Best Copium";
+        configBest.icon = "\\$777" + Icons::ArrowCircleUp;
+        configBest.shareIcon = false;
+        configBest.usePreviousColor = true;
 
-        config.defaultName = "Best Copium";
-        config.icon = "\\$777" + Icons::ArrowCircleUp;
-        config.shareIcon = false;
-        config.usePreviousColor = true;
-
-        return config;
+        return configBest;
     }
 
     uint GetMedalTime() override {
@@ -33,10 +33,12 @@ class UME_Best : UltimateMedalsExtended::IMedal {
 class UME_Previous : UltimateMedalsExtended::IMedal {
     UltimateMedalsExtended::Config GetConfig() override {
         UltimateMedalsExtended::Config config;
+
         config.defaultName = "Previous Copium";
         config.icon = "\\$777" + Icons::ArrowCircleLeft;
         config.shareIcon = false;
         config.usePreviousColor = true;
+
         return config;
     }
 
@@ -52,17 +54,14 @@ class UME_Previous : UltimateMedalsExtended::IMedal {
 }
 
 class UME_Session : UltimateMedalsExtended::IMedal {
-    UltimateMedalsExtended::Config@ config;
+    UltimateMedalsExtended::Config GetConfig() override {
+        UltimateMedalsExtended::Config config;
 
-    UME_Session() {
-        @config = UltimateMedalsExtended::Config();
         config.defaultName = "Session Copium";
         config.icon = "\\$777" + Icons::ArrowCircleDown;
         config.shareIcon = false;
         config.usePreviousColor = true;
-    }
 
-    UltimateMedalsExtended::Config GetConfig() override {
         return config;
     }
 
