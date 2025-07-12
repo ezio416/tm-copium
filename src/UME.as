@@ -36,7 +36,11 @@ class UME_Best : UltimateMedalsExtended::IMedal {
             return false;
         }
 
-        return GetBestEver(uid) > 0;
+        const uint best = GetBestEver(uid);
+        return true
+            and best > 0
+            and best < GetPB()
+        ;
     }
 
     void UpdateMedal(const string&in uid) override {

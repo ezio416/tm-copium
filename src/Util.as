@@ -1,5 +1,5 @@
 // c 2024-03-05
-// m 2025-07-07
+// m 2025-07-12
 
 enum TimesSource {
     RaceData,
@@ -24,6 +24,31 @@ uint GetBestEver(const string&in uid) {
     }
 
     return uint(bestEver[uid]);
+}
+
+uint GetPB() {
+    auto App = cast<CTrackMania>(GetApp());
+
+    if (false
+        or App.RootMap is null
+        or App.MenuManager is null
+        or App.MenuManager.MenuCustom_CurrentManiaApp is null
+        or App.MenuManager.MenuCustom_CurrentManiaApp.ScoreMgr is null
+        or App.UserManagerScript is null
+        or App.UserManagerScript.Users.Length == 0
+        or App.UserManagerScript.Users[0] is null
+    ) {
+        return uint(-1);
+    }
+
+    return App.MenuManager.MenuCustom_CurrentManiaApp.ScoreMgr.Map_GetRecord_v2(
+        App.UserManagerScript.Users[0].Id,
+        App.RootMap.EdChallengeId,
+        "PersonalBest",
+        "",
+        "TimeAttack",
+        ""
+    );
 }
 
 vec4 GetMedalColor(const int medal) {
