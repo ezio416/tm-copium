@@ -1,5 +1,5 @@
 // c 2024-03-05
-// m 2025-07-07
+// m 2025-07-12
 
 uint[]        bestCpTimes;
 Json::Value@  bestEver        = Json::Object();
@@ -128,11 +128,7 @@ void Main() {
 void Render() {
     RenderDebug();
 
-    if (false
-        or !S_Enabled
-        or (S_HideWithGame and !UI::IsGameUIVisible())
-        or (S_HideWithOP and !UI::IsOverlayShown())
-    ) {
+    if (!S_Enabled) {
         return;
     }
 
@@ -207,6 +203,13 @@ void Render() {
 
         lastTime = theoreticalTime;
         SetBestEver(App.RootMap.EdChallengeId, theoreticalTime);
+    }
+
+    if (false
+        or (S_HideWithGame and !UI::IsGameUIVisible())
+        or (S_HideWithOP and !UI::IsOverlayShown())
+    ) {
+        return;
     }
 
     cpCount = raceData.LocalPlayer.cpCount;
