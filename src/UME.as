@@ -1,5 +1,5 @@
 // c 2025-07-06
-// m 2025-07-07
+// m 2025-07-12
 
 #if DEPENDENCY_ULTIMATEMEDALSEXTENDED
 
@@ -7,22 +7,40 @@ class UME_Best : UltimateMedalsExtended::IMedal {
     string uid;
 
     UltimateMedalsExtended::Config GetConfig() override {
-        UltimateMedalsExtended::Config config;
+        UltimateMedalsExtended::Config c;
 
-        config.defaultName = "Best Copium";
-        config.icon = "\\$777" + Icons::ArrowCircleUp;
-        config.shareIcon = false;
-        config.usePreviousColor = true;
+        c.defaultName = "Best Copium";
+        c.icon = "\\$777" + Icons::ArrowCircleUp;
+        c.shareIcon = false;
+        c.usePreviousColor = true;
 
-        return config;
+        return c;
     }
 
     uint GetMedalTime() override {
+        if (false
+            or pluginMeta is null
+            or !pluginMeta.Enabled
+        ) {
+            return 0;
+        }
+
         return GetBestEver(uid);
     }
 
     bool HasMedalTime(const string&in uid) override {
-        return GetBestEver(uid) > 0;
+        if (false
+            or pluginMeta is null
+            or !pluginMeta.Enabled
+        ) {
+            return false;
+        }
+
+        const uint best = GetBestEver(uid);
+        return true
+            and best > 0
+            and best < GetPB()
+        ;
     }
 
     void UpdateMedal(const string&in uid) override {
@@ -32,19 +50,35 @@ class UME_Best : UltimateMedalsExtended::IMedal {
 
 class UME_Previous : UltimateMedalsExtended::IMedal {
     UltimateMedalsExtended::Config GetConfig() override {
-        UltimateMedalsExtended::Config config;
-        config.defaultName = "Previous Copium";
-        config.icon = "\\$777" + Icons::ArrowCircleLeft;
-        config.shareIcon = false;
-        config.usePreviousColor = true;
-        return config;
+        UltimateMedalsExtended::Config c;
+
+        c.defaultName = "Previous Copium";
+        c.icon = "\\$777" + Icons::ArrowCircleLeft;
+        c.shareIcon = false;
+        c.usePreviousColor = true;
+
+        return c;
     }
 
     uint GetMedalTime() override {
+        if (false
+            or pluginMeta is null
+            or !pluginMeta.Enabled
+        ) {
+            return 0;
+        }
+
         return lastTime;
     }
 
     bool HasMedalTime(const string&in uid) override {
+        if (false
+            or pluginMeta is null
+            or !pluginMeta.Enabled
+        ) {
+            return false;
+        }
+
         return lastTime > bestSessionTime;
     }
 
@@ -52,25 +86,36 @@ class UME_Previous : UltimateMedalsExtended::IMedal {
 }
 
 class UME_Session : UltimateMedalsExtended::IMedal {
-    UltimateMedalsExtended::Config@ config;
-
-    UME_Session() {
-        @config = UltimateMedalsExtended::Config();
-        config.defaultName = "Session Copium";
-        config.icon = "\\$777" + Icons::ArrowCircleDown;
-        config.shareIcon = false;
-        config.usePreviousColor = true;
-    }
-
     UltimateMedalsExtended::Config GetConfig() override {
-        return config;
+        UltimateMedalsExtended::Config c;
+
+        c.defaultName = "Session Copium";
+        c.icon = "\\$777" + Icons::ArrowCircleDown;
+        c.shareIcon = false;
+        c.usePreviousColor = true;
+
+        return c;
     }
 
     uint GetMedalTime() override {
+        if (false
+            or pluginMeta is null
+            or !pluginMeta.Enabled
+        ) {
+            return 0;
+        }
+
         return bestSessionTime;
     }
 
     bool HasMedalTime(const string&in uid) override {
+        if (false
+            or pluginMeta is null
+            or !pluginMeta.Enabled
+        ) {
+            return false;
+        }
+
         return bestSessionTime > GetBestEver(uid);
     }
 
