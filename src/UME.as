@@ -1,5 +1,5 @@
 // c 2025-07-06
-// m 2025-07-12
+// m 2025-08-10
 
 #if DEPENDENCY_ULTIMATEMEDALSEXTENDED
 
@@ -79,7 +79,22 @@ class UME_Previous : UltimateMedalsExtended::IMedal {
             return false;
         }
 
-        return lastTime > bestSessionTime;
+        return true
+            and lastTime > 0
+            and (false
+                or lastTime > bestSessionTime
+                or (true
+                    and !UltimateMedalsExtended::IsMedalEnabled("Session Copium")
+                    and (false
+                        or bestSessionTime > GetBestEver(uid)
+                        or (true
+                            and !UltimateMedalsExtended::IsMedalEnabled("Best Copium")
+                            and bestSessionTime < GetPB()
+                        )
+                    )
+                )
+            )
+        ;
     }
 
     void UpdateMedal(const string&in uid) override { }
@@ -116,7 +131,16 @@ class UME_Session : UltimateMedalsExtended::IMedal {
             return false;
         }
 
-        return bestSessionTime > GetBestEver(uid);
+        return true
+            and bestSessionTime > 0
+            and (false
+                or bestSessionTime > GetBestEver(uid)
+                or (true
+                    and !UltimateMedalsExtended::IsMedalEnabled("Best Copium")
+                    and bestSessionTime < GetPB()
+                )
+            )
+        ;
     }
 
     void UpdateMedal(const string&in uid) override { }
