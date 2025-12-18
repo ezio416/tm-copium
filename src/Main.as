@@ -191,7 +191,11 @@ void Render() {
         ? raceData.LocalPlayer.LastTheoreticalCpTime
         : Math::Max(0, raceData.LocalPlayer.TheoreticalRaceTime)
     ;
-    if (int(theoreticalTime) <= 0) {
+    const uint raceTime = finished
+        ? raceData.LocalPlayer.lastCpTime
+        : raceData.LocalPlayer.CurrentRaceTime
+    ;
+    if (int(theoreticalTime) <= 0 || int(theoreticalTime) > int(raceTime) - 500) {
         return;
     }
 
