@@ -2,7 +2,7 @@
 name = "Copium"
 author = "Ezio"
 category = "Race"
-version = "1.3.2"
+version = "1.3.3"
 siteid = 500
 
 [script]
