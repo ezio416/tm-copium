@@ -1,6 +1,3 @@
-// c 2024-03-05
-// m 2025-07-12
-
 enum TimesSource {
     RaceData,
     PbGhost,

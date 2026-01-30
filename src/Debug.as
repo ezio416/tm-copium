@@ -1,6 +1,3 @@
-// c 2025-04-09
-// m 2025-07-07
-
 void RenderDebug() {
     if (false
         or !S_Debug

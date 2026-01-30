@@ -1,6 +1,3 @@
-// c 2024-03-05
-// m 2025-07-06
-
 [Setting category="General" name="Show timer"]
 bool S_Enabled = true;
 

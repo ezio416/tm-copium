@@ -1,6 +1,3 @@
-// c 2025-07-06
-// m 2025-08-10
-
 #if DEPENDENCY_ULTIMATEMEDALSEXTENDED
 
 class UME_Best : UltimateMedalsExtended::IMedal {
