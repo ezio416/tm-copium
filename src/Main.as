@@ -311,8 +311,8 @@ void RenderTimer() {
     const vec2 size = nvg::TextBounds(text);  // todo: change this for variable width fonts
     const float diffWidth = nvg::TextBounds(diffText).x;
 
-    const float posX = Draw::GetWidth() * S_X;
-    const float posY = Draw::GetHeight() * S_Y;
+    const float posX = Display::GetWidth() * S_X;
+    const float posY = Display::GetHeight() * S_Y;
     const float radius = S_FontSize * 0.4f;
 
     const float halfSizeX = size.x * 0.5f;
