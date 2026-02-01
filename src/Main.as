@@ -98,6 +98,7 @@ void Main() {
         }
 
         const MLFeed::GhostInfo_V2@ ghost, pbGhost;
+        uint64 now = Time::Now;
         for (uint i = 0; i < ghostData.Ghosts_V2.Length; i++) {
             if (true
                 and (@ghost = ghostData.Ghosts_V2[i]) !is null
@@ -106,6 +107,12 @@ void Main() {
                 and ghost.Checkpoints.Length == raceData.CPsToFinish
             ) {
                 @pbGhost = ghost;
+            }
+
+            // hotfix for 2026-01-26_15_06 (thanks fort)
+            if (now < Time::Now) {
+                now = Time::Now;
+                yield();
             }
         }
 
