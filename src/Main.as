@@ -102,8 +102,14 @@ void Main() {
         for (uint i = 0; i < ghostData.Ghosts_V2.Length; i++) {
             if (true
                 and (@ghost = ghostData.Ghosts_V2[i]) !is null
-                and (ghost.IsLocalPlayer or ghost.IsPersonalBest)
-                and (pbGhost is null or ghost.Result_Time < pbGhost.Result_Time)
+                and (false
+                    or ghost.IsLocalPlayer
+                    or ghost.IsPersonalBest
+                )
+                and (false
+                    or pbGhost is null
+                    or ghost.Result_Time < pbGhost.Result_Time
+                )
                 and ghost.Checkpoints.Length == raceData.CPsToFinish
             ) {
                 @pbGhost = ghost;
