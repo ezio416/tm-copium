@@ -8,7 +8,7 @@ void RenderDebug() {
 
     const string uid = GetApp().RootMap.EdChallengeId;
 
-    if (UI::Begin(pluginTitle + "\\$888 (debug)", S_Debug, UI::WindowFlags::None)) {
+    if (UI::Begin(pluginTitle + "\\$888 (debug)", S_Debug)) {
         const uint best = GetBestEver(uid);
         UI::AlignTextToFramePadding();
         UI::Text("best ever time: " + Time::Format(best));
