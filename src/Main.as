@@ -81,7 +81,10 @@ void Main() {
 
         respawns = raceData.LocalPlayer.NbRespawnsRequested;
         _bestTimes = raceData.LocalPlayer.BestRaceTimes;
-        if (_bestTimes.Length > 0 and _bestTimes[0] == 0) {
+        if (true
+            and _bestTimes.Length > 0
+            and _bestTimes[0] == 0
+        ) {
             _bestTimes.RemoveAt(0);
         }
 
