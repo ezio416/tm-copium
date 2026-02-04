@@ -14,6 +14,7 @@ const string  pluginTitle     = pluginColor + pluginIcon + "\\$G " + pluginMeta.
 uint          respawns        = 0;
 TimesSource   source          = TimesSource::None;
 string        text;
+const string  versionFile     = IO::FromStorageFolder("version.txt");
 
 void OnDestroyed() {
 #if DEPENDENCY_ULTIMATEMEDALSEXTENDED
@@ -41,6 +42,35 @@ void Main() {
         }
     } else {
         trace("best.json not found, try respawning!");
+    }
+
+    bool old = true;
+    string version;
+
+    if (IO::FileExists(versionFile)) {
+        IO::File file(versionFile, IO::FileMode::Read);
+        version = file.ReadToEnd();
+        file.Close();
+        if (version == pluginMeta.Version) {
+            old = false;
+        }
+    }
+
+    if (old) {
+        warn("plugin was updated" + (version.Length > 0 ? ", was v" + version : ""));
+
+        if (version < "1.5.0") {
+            warn("resetting font choice");
+            S_Font = Font::DroidSans_Bold;
+        }
+
+        try {
+            IO::File file(versionFile, IO::FileMode::Write);
+            file.Write(pluginMeta.Version);
+            file.Close();
+        } catch {
+            error("error writing version file: " + getExceptionInfo());
+        }
     }
 
     const MLFeed::HookRaceStatsEventsBase_V4@ raceData;

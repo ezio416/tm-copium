@@ -116,7 +116,7 @@ void SettingsTab_Font() {
 
     const string userFontFolder = IO::FromDataFolder("Fonts").Replace("\\", "/");
 
-    if (UI::BeginCombo("Style", tostring(S_Font))) {
+    if (UI::BeginCombo("Style", tostring(S_Font), UI::ComboFlags::HeightLargest)) {
         Font f;
 
         for (int i = 0; i < Font::_Droid_End; i++) {
