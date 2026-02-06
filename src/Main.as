@@ -124,7 +124,9 @@ void Main() {
             if (respawns > tm_prevRespawns) {
                 uint duration = uint(S_TM_ShowOnRespawnDuration);
                 uint64 newEnd = Time::Now + uint64(duration);
-                if (tm_showEnd < newEnd) tm_showEnd = newEnd;
+                if (tm_showEnd < newEnd) {
+                    tm_showEnd = newEnd;
+                }
             }
         }
         tm_prevRespawns = respawns;
@@ -289,7 +291,9 @@ void Render() {
         ) {
             uint duration = uint(S_TM_ShowOnRespawnDuration);
             uint64 newEnd = Time::Now + uint64(duration);
-            if (tm_showEnd < newEnd) tm_showEnd = newEnd;
+            if (tm_showEnd < newEnd) {
+                tm_showEnd = newEnd;
+            }
         }
     }
 

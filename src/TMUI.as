@@ -79,7 +79,8 @@ void RenderTimerTMStyle() {
 
         if (true
             and UI::IsMouseDown()
-            and (hovering or tmUIDragging)) {
+            and (hovering or tmUIDragging)
+        ) {
             if (!tmUIDragging) {
                 tmUIDragging = true;
                 tmUIDragOffset = mousePos - vec2(centerX, y + boxHeight / 2.0f);
