@@ -5,6 +5,7 @@ uint          bestSessionTime = 0;
 int           cpCount         = 0;
 int           diff            = 0;
 string        diffText;
+bool          finished;
 uint          lastTime        = 0;
 int           medal           = 0;
 const string  pluginColor     = "\\$FA0";
@@ -13,8 +14,13 @@ Meta::Plugin@ pluginMeta      = Meta::ExecutingPlugin();
 const string  pluginTitle     = pluginColor + pluginIcon + "\\$G " + pluginMeta.Name;
 uint          respawns        = 0;
 TimesSource   source          = TimesSource::None;
+uint          theoreticalTime;
 string        text;
 const string  versionFile     = IO::FromStorageFolder("version.txt");
+uint64        tm_showEnd = 0;
+uint64        tm_prevLostTotal = 0;
+int           tm_prevRespawns = 0;
+bool          tm_prevFinished = false;
 
 void OnDestroyed() {
 #if DEPENDENCY_ULTIMATEMEDALSEXTENDED
@@ -26,6 +32,7 @@ void OnDestroyed() {
 
 void Main() {
     ChangeFont();
+    TMUI_Init();
 
 #if DEPENDENCY_ULTIMATEMEDALSEXTENDED
     trace("registering UME medals");
@@ -110,6 +117,17 @@ void Main() {
         }
 
         respawns = raceData.LocalPlayer.NbRespawnsRequested;
+        if (true
+            and S_TMStyleUI
+            and S_TM_ShowOnRespawn
+        ) {
+            if (respawns > tm_prevRespawns) {
+                uint duration = uint(S_TM_ShowOnRespawnDuration);
+                uint64 newEnd = Time::Now + uint64(duration);
+                if (tm_showEnd < newEnd) tm_showEnd = newEnd;
+            }
+        }
+        tm_prevRespawns = respawns;
         _bestTimes = raceData.LocalPlayer.BestRaceTimes;
         if (true
             and _bestTimes.Length > 0
@@ -198,6 +216,17 @@ void Render() {
     }
 
     if (true
+        and S_TMStyleUI
+        and !S_TM_Persist
+        and !S_TM_ShowOnRespawn
+    ) {
+        if (Playground.UIConfigs[0].UISequence != CGamePlaygroundUIConfig::EUISequence::Playing) {
+            ResetSaved();
+            return;
+        }
+    }
+
+    if (true
         and Playground.GameTerminals[0].GUIPlayer !is null
         and Playground.GameTerminals[0].GUIPlayer !is Playground.GameTerminals[0].ControlledPlayer
     ) {
@@ -205,7 +234,8 @@ void Render() {
     }
 
     if (respawns == 0) {
-        if (S_Persist) {
+        bool persist = S_TMStyleUI ? S_TM_Persist : S_Persist;
+        if (persist) {
             if (true
                 and raceData.LocalPlayer.CurrentRaceTime < 0
                 and text.Length > 0
@@ -229,8 +259,8 @@ void Render() {
             return;
     }
 
-    const bool finished = raceData.LocalPlayer.cpCount == int(raceData.CPsToFinish);
-    const uint theoreticalTime = finished
+    finished = raceData.LocalPlayer.cpCount == int(raceData.CPsToFinish);
+    theoreticalTime = finished
         ? raceData.LocalPlayer.LastTheoreticalCpTime
         : Math::Max(0, raceData.LocalPlayer.TheoreticalRaceTime)
     ;
@@ -250,7 +280,20 @@ void Render() {
 
         lastTime = theoreticalTime;
         SetBestEver(App.RootMap.EdChallengeId, theoreticalTime);
+
+        if (true
+            and S_TMStyleUI
+            and S_TM_ShowOnRespawn
+            and respawns > 0
+            and !tm_prevFinished
+        ) {
+            uint duration = uint(S_TM_ShowOnRespawnDuration);
+            uint64 newEnd = Time::Now + uint64(duration);
+            if (tm_showEnd < newEnd) tm_showEnd = newEnd;
+        }
     }
+
+    tm_prevFinished = finished;
 
     if (false
         or (S_HideWithGame and !UI::IsGameUIVisible())
@@ -265,7 +308,6 @@ void Render() {
     if (!S_Thousandths) {
         text = text.SubStr(0, text.Length - 1);
     }
-
     if (true
         and S_Respawns
         and finished
@@ -350,6 +392,14 @@ void RenderMenu() {
 }
 
 void RenderTimer() {
+    if (S_TMStyleUI) {
+        RenderTimerTMStyle();
+    } else {
+        RenderTimerClassic();
+    }
+}
+
+void RenderTimerClassic() {
     nvg::FontSize(S_FontSize);
     nvg::FontFace(font);
     nvg::TextAlign(nvg::Align::Center | nvg::Align::Middle);

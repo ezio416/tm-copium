@@ -1,4 +1,6 @@
 nvg::Font font;
+nvg::Font tmuiFont;
+
 Font currentFont = S_Font;
 
 enum Font {
@@ -26,7 +28,7 @@ enum Font {
 void ChangeFont() {
     int f = -1;
 
-    switch (S_Font) {
+    switch (S_TMStyleUI ? S_TM_Font : S_Font) {
         case Font::DroidSans:                   f = nvg::LoadFont("DroidSans.ttf");                                             break;
         case Font::DroidSans_Bold:              f = nvg::LoadFont("DroidSans-Bold.ttf");                                        break;
         case Font::DroidSans_Mono:              f = nvg::LoadFont("DroidSansMono.ttf");                                         break;
@@ -49,7 +51,11 @@ void ChangeFont() {
     }
 
     if (f > -1) {
-        font = f;
+        if (S_TMStyleUI) {
+            tmuiFont = f;
+        } else {
+            font = f;
+        }
     }
 
     currentFont = S_Font;
