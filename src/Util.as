@@ -83,6 +83,11 @@ void Reset() {
     respawns    = 0;
     source      = TimesSource::None;
 
+    tm_showEnd = 0;
+    tm_prevRespawns = 0;
+    tm_prevLostTotal = 0;
+    tm_prevFinished = false;
+
     ResetSaved();
 }
 
